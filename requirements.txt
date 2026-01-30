@@ -1,0 +1,24 @@
+# 주식 매매일지 웹 앱 의존성
+
+# Web Framework
+streamlit>=1.28.0
+
+# Database
+sqlalchemy>=2.0.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+plotly>=5.18.0
+altair>=5.0.0
+
+# AI (Optional)
+openai>=1.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Date handling
+python-dateutil>=2.8.0
