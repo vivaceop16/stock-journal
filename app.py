@@ -55,11 +55,11 @@ st.markdown("""
 # 사이드바
 with st.sidebar:
     st.markdown("### 📌 빠른 링크")
-    st.page_link("pages/1_📝_매매입력.py", label="📝 매매 입력")
-    st.page_link("pages/2_📊_매매목록.py", label="📊 매매 목록")
-    st.page_link("pages/3_🤖_AI분석.py", label="🤖 AI 분석")
-    st.page_link("pages/4_📚_학습가이드.py", label="📚 학습 가이드")
-    st.page_link("pages/5_📈_월간리포트.py", label="📈 월간 리포트")
+    st.page_link("pages/1_Trade_Entry.py", label="📝 매매 입력")
+    st.page_link("pages/2_Trade_List.py", label="📊 매매 목록")
+    st.page_link("pages/3_AI_Analysis.py", label="🤖 AI 분석")
+    st.page_link("pages/4_Learning_Guide.py", label="📚 학습 가이드")
+    st.page_link("pages/5_Monthly_Report.py", label="📈 월간 리포트")
 
     st.markdown("---")
     st.markdown("### ⚙️ 설정")
