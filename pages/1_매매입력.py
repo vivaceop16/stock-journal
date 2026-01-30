@@ -5,6 +5,9 @@
 import streamlit as st
 from datetime import date, datetime
 from decimal import Decimal
+import base64
+import json
+import re
 
 from database import init_db
 from services import TradeService
@@ -22,6 +25,160 @@ trade_service = TradeService()
 # 세션 상태 초기화
 if 'confidence_level' not in st.session_state:
     st.session_state.confidence_level = 3  # 기본값: 보통
+
+if 'extracted_trades' not in st.session_state:
+    st.session_state.extracted_trades = []
+
+# 이미지에서 매매 내역 추출 함수
+def extract_trades_from_image(image_bytes, api_key):
+    """OpenAI Vision API로 이미지에서 매매 내역 추출"""
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key)
+
+        base64_image = base64.b64encode(image_bytes).decode('utf-8')
+
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": """이 이미지는 주식 매매 내역 캡처입니다. 각 거래 정보를 추출해서 JSON 배열로 반환해주세요.
+
+반환 형식:
+[
+  {
+    "date": "2024-01-30",
+    "stock_name": "종목명",
+    "trade_type": "BUY" 또는 "SELL",
+    "quantity": 수량(정수),
+    "price": 1주당가격(정수),
+    "total_amount": 총금액(정수)
+  }
+]
+
+참고:
+- "구매"는 "BUY", "판매"/"매도"는 "SELL"
+- 날짜가 "1.30" 형식이면 올해 날짜로 변환 (예: "2024-01-30")
+- 금액에서 쉼표, "원" 등 제거하고 숫자만
+- 1주당 가격을 알 수 없으면 총금액/수량으로 계산
+- 손익 금액(빨간색/파란색)이 아닌 실제 거래 금액 사용
+
+JSON만 반환하세요. 다른 텍스트 없이."""
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{base64_image}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens=1000
+        )
+
+        result_text = response.choices[0].message.content.strip()
+        # JSON 부분만 추출
+        json_match = re.search(r'\[.*\]', result_text, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group())
+        return json.loads(result_text)
+    except Exception as e:
+        st.error(f"이미지 분석 오류: {e}")
+        return []
+
+# 📸 이미지 업로드 섹션
+st.subheader("📸 스크린샷으로 자동 입력")
+
+api_key = st.session_state.get('openai_api_key', '')
+
+if not api_key:
+    st.warning("⚠️ 이미지 인식을 사용하려면 메인 페이지에서 OpenAI API Key를 입력하세요.")
+else:
+    uploaded_file = st.file_uploader(
+        "매매 내역 스크린샷을 업로드하세요",
+        type=['png', 'jpg', 'jpeg'],
+        help="증권사 앱의 매매 내역 캡처 이미지를 올리면 자동으로 인식합니다"
+    )
+
+    if uploaded_file is not None:
+        col1, col2 = st.columns([1, 1])
+
+        with col1:
+            st.image(uploaded_file, caption="업로드된 이미지", use_container_width=True)
+
+        with col2:
+            if st.button("🔍 이미지 분석", use_container_width=True):
+                with st.spinner("이미지 분석 중..."):
+                    image_bytes = uploaded_file.getvalue()
+                    extracted = extract_trades_from_image(image_bytes, api_key)
+
+                    if extracted:
+                        st.session_state.extracted_trades = extracted
+                        st.success(f"✅ {len(extracted)}건의 거래를 인식했습니다!")
+                    else:
+                        st.error("거래 내역을 인식하지 못했습니다.")
+
+    # 추출된 거래 표시 및 저장
+    if st.session_state.extracted_trades:
+        st.markdown("### 📋 인식된 거래 내역")
+
+        for idx, trade in enumerate(st.session_state.extracted_trades):
+            trade_type_kr = "매수" if trade.get('trade_type') == 'BUY' else "매도"
+            emoji = "🟢" if trade.get('trade_type') == 'BUY' else "🔴"
+
+            with st.expander(f"{emoji} {trade.get('stock_name', '?')} - {trade_type_kr} {trade.get('quantity', '?')}주", expanded=True):
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.write(f"**날짜:** {trade.get('date', '-')}")
+                    st.write(f"**종목:** {trade.get('stock_name', '-')}")
+                    st.write(f"**유형:** {trade_type_kr}")
+
+                with col2:
+                    st.write(f"**수량:** {trade.get('quantity', 0)}주")
+                    st.write(f"**단가:** {trade.get('price', 0):,}원")
+                    st.write(f"**총액:** {trade.get('total_amount', 0):,}원")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.button("✅ 전체 저장", use_container_width=True, type="primary"):
+                saved_count = 0
+                for trade in st.session_state.extracted_trades:
+                    try:
+                        trade_data = {
+                            'stock_name': trade.get('stock_name', ''),
+                            'stock_code': None,
+                            'trade_date': datetime.strptime(trade.get('date', ''), '%Y-%m-%d').date() if trade.get('date') else date.today(),
+                            'trade_type': trade.get('trade_type', 'BUY'),
+                            'price': trade.get('price', 0),
+                            'quantity': trade.get('quantity', 0),
+                            'trade_reason': '스크린샷에서 자동 입력',
+                            'confidence_score': 5,
+                            'linked_trade_id': None
+                        }
+                        trade_service.create_trade(trade_data)
+                        saved_count += 1
+                    except Exception as e:
+                        st.error(f"저장 오류 ({trade.get('stock_name')}): {e}")
+
+                if saved_count > 0:
+                    st.success(f"✅ {saved_count}건 저장 완료!")
+                    st.session_state.extracted_trades = []
+                    st.rerun()
+
+        with col2:
+            if st.button("🗑️ 취소", use_container_width=True):
+                st.session_state.extracted_trades = []
+                st.rerun()
+
+st.markdown("---")
+st.subheader("✏️ 직접 입력")
 
 # 입력 폼
 with st.form("trade_form"):
