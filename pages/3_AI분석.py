@@ -10,13 +10,28 @@ from datetime import date, timedelta
 from database import init_db
 from database.models import AnalysisResult
 from services import TradeService, AIAnalyzer
+from styles import apply_toss_style
+
+# 페이지 설정
+st.set_page_config(page_title="AI 분석", page_icon="🤖", layout="wide")
+
+# 토스 스타일 적용
+apply_toss_style()
 
 # 데이터베이스 초기화
 init_db()
 
-st.title("🤖 AI 분석")
-st.markdown("매매 기록을 분석하여 점수와 피드백을 제공합니다.")
-st.markdown("---")
+# 헤더
+st.markdown("""
+<div style="padding: 20px 0 10px 0;">
+    <h1 style="font-size: 24px; font-weight: 700; color: #191F28; margin: 0;">
+        AI 분석
+    </h1>
+    <p style="font-size: 14px; color: #8B95A1; margin-top: 6px;">
+        매매를 분석하고 점수를 확인해요
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # 서비스 초기화
 trade_service = TradeService()

@@ -11,13 +11,28 @@ import re
 
 from database import init_db
 from services import TradeService
+from styles import apply_toss_style
+
+# 페이지 설정
+st.set_page_config(page_title="매매 입력", page_icon="📝", layout="wide")
+
+# 토스 스타일 적용
+apply_toss_style()
 
 # 데이터베이스 초기화
 init_db()
 
-st.title("📝 매매 입력")
-st.markdown("새로운 매매 기록을 입력하세요.")
-st.markdown("---")
+# 헤더
+st.markdown("""
+<div style="padding: 20px 0 10px 0;">
+    <h1 style="font-size: 24px; font-weight: 700; color: #191F28; margin: 0;">
+        매매 입력
+    </h1>
+    <p style="font-size: 14px; color: #8B95A1; margin-top: 6px;">
+        새로운 거래를 기록해요
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # 서비스 초기화
 trade_service = TradeService()

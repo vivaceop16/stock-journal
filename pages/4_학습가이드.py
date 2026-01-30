@@ -10,13 +10,28 @@ from datetime import date
 from database import init_db
 from database.models import AnalysisResult
 from services import TradeService, AIAnalyzer, LearningGuide
+from styles import apply_toss_style
+
+# 페이지 설정
+st.set_page_config(page_title="학습 가이드", page_icon="📚", layout="wide")
+
+# 토스 스타일 적용
+apply_toss_style()
 
 # 데이터베이스 초기화
 init_db()
 
-st.title("📚 학습 가이드")
-st.markdown("매매 패턴을 분석하여 개인화된 학습 과제를 제공합니다.")
-st.markdown("---")
+# 헤더
+st.markdown("""
+<div style="padding: 20px 0 10px 0;">
+    <h1 style="font-size: 24px; font-weight: 700; color: #191F28; margin: 0;">
+        학습 가이드
+    </h1>
+    <p style="font-size: 14px; color: #8B95A1; margin-top: 6px;">
+        나만의 학습 과제를 확인해요
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # 서비스 초기화
 trade_service = TradeService()
