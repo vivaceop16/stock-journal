@@ -6,26 +6,50 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from .models import Base
 
-# 데이터베이스 경로
-DB_PATH = os.environ.get('DATABASE_URL', 'sqlite:///./data/trading_journal.db')
+# Streamlit secrets에서 데이터베이스 URL 가져오기
+def get_database_url():
+    # Streamlit Cloud 환경
+    try:
+        import streamlit as st
+        if hasattr(st, 'secrets') and 'DATABASE_URL' in st.secrets:
+            return st.secrets['DATABASE_URL']
+    except:
+        pass
+
+    # 환경 변수 또는 기본값 (로컬 개발용)
+    return os.environ.get('DATABASE_URL', 'sqlite:///./data/trading_journal.db')
+
+DB_PATH = get_database_url()
 
 
 def get_engine():
     """SQLAlchemy 엔진 생성"""
+    db_url = get_database_url()
+    connect_args = {}
+
+    if 'sqlite' in db_url:
+        connect_args = {"check_same_thread": False}
+
     return create_engine(
-        DB_PATH,
-        connect_args={"check_same_thread": False} if 'sqlite' in DB_PATH else {},
-        echo=False
+        db_url,
+        connect_args=connect_args,
+        echo=False,
+        pool_pre_ping=True  # 연결 상태 확인
     )
 
 
 def init_db():
     """데이터베이스 초기화 (테이블 생성)"""
-    # data 디렉토리 생성
-    os.makedirs('./data', exist_ok=True)
+    db_url = get_database_url()
+
+    # SQLite인 경우에만 data 디렉토리 생성
+    if 'sqlite' in db_url:
+        os.makedirs('./data', exist_ok=True)
 
     engine = get_engine()
-    Base.metadata.create_all(bind=engine)
+    # PostgreSQL(Supabase)은 테이블이 이미 생성되어 있음
+    if 'sqlite' in db_url:
+        Base.metadata.create_all(bind=engine)
     return engine
 
 
