@@ -54,14 +54,6 @@ st.markdown("""
 
 # 사이드바
 with st.sidebar:
-    st.markdown("### 📌 빠른 링크")
-    st.page_link("pages/1_Trade_Entry.py", label="📝 매매 입력")
-    st.page_link("pages/2_Trade_List.py", label="📊 매매 목록")
-    st.page_link("pages/3_AI_Analysis.py", label="🤖 AI 분석")
-    st.page_link("pages/4_Learning_Guide.py", label="📚 학습 가이드")
-    st.page_link("pages/5_Monthly_Report.py", label="📈 월간 리포트")
-
-    st.markdown("---")
     st.markdown("### ⚙️ 설정")
 
     # API 키 입력 (세션에 저장)
