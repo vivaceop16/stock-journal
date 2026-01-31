@@ -112,27 +112,25 @@ for trade_date, trades in sorted(date_groups.items(), reverse=True):
         card_border = "#3182F6" if selected_trade_id == trade.id else "#F2F3F5"
         card_bg = "#F8FAFF" if selected_trade_id == trade.id else "#FFFFFF"
 
-        # 분석 버튼 스타일 (배경색으로 구분)
-        btn_bg = "#E8F3FF" if has_analysis else "#F7F8FA"
-        btn_color = "#3182F6" if has_analysis else "#6B7684"
+        # 버튼 텍스트
         btn_text = "재분석" if has_analysis else "분석"
 
-        col1, col2, col3, col4, col5 = st.columns([0.6, 1.5, 1.2, 1, 0.7])
+        col1, col2, col3, col4, col5 = st.columns([0.5, 1.2, 1.5, 0.8, 0.6])
 
         with col1:
             st.markdown(f'<div style="padding: 12px 0;"><span style="background: {trade_bg}; color: {trade_color}; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">{trade_type_str}</span></div>', unsafe_allow_html=True)
 
         with col2:
-            st.markdown(f'<div style="font-weight: 600; color: #191F28; padding: 12px 0;">{trade.stock_name}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="font-weight: 600; color: #191F28; padding: 12px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{trade.stock_name}</div>', unsafe_allow_html=True)
 
         with col3:
-            st.markdown(f'<div style="color: #191F28; font-size: 14px; padding: 12px 0;">{float(trade.price):,.0f}원 × {trade.quantity}주</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="color: #6B7684; font-size: 13px; padding: 12px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{float(trade.price):,.0f}원 × {trade.quantity}주</div>', unsafe_allow_html=True)
 
         with col4:
-            st.markdown(f'<div style="padding: 12px 0;">{profit_info if profit_info else "<span style=\'color: #8B95A1;\'>-</span>"}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="padding: 12px 0; text-align: right;">{profit_info if profit_info else "<span style=\'color: #8B95A1;\'>-</span>"}</div>', unsafe_allow_html=True)
 
         with col5:
-            if st.button(btn_text, key=f"analyze_{trade.id}", use_container_width=True, type="secondary" if not has_analysis else "primary"):
+            if st.button(btn_text, key=f"analyze_{trade.id}", use_container_width=True):
                 st.session_state['analyze_trade_id'] = trade.id
                 st.session_state['run_analysis'] = True
                 st.rerun()

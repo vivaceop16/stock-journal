@@ -399,8 +399,8 @@ else:
             # 날짜 헤더
             st.markdown(f"""
             <div style="display: flex; justify-content: space-between; align-items: center;
-                        padding: 14px 0 10px 0; border-bottom: 2px solid #E5E8EB; margin-top: 16px;">
-                <span style="font-weight: 700; color: #191F28; font-size: 15px;">{trade_date}</span>
+                        padding: 10px 0; margin-top: 12px;">
+                <span style="font-weight: 600; color: #191F28; font-size: 14px;">{trade_date}</span>
                 <span style="font-size: 14px; color: {profit_color}; font-weight: 600;">{profit_str}</span>
             </div>
             """, unsafe_allow_html=True)
@@ -409,6 +409,7 @@ else:
             for trade in day_trades:
                 trade_type_str = "매수" if trade.trade_type == "BUY" else "매도"
                 trade_color = "#3182F6" if trade.trade_type == "BUY" else "#F04452"
+                trade_bg = "#E8F3FF" if trade.trade_type == "BUY" else "#FFEFEF"
 
                 if trade.profit_rate is not None:
                     rate = float(trade.profit_rate)
@@ -419,66 +420,46 @@ else:
                     t_profit_str = "-"
                     t_profit_color = "#8B95A1"
 
-                # 카드 스타일 컨테이너
-                with st.container():
-                    col_check, col_content = st.columns([0.08, 0.92])
+                # 카드 + 체크박스 + 수정버튼
+                col_check, col_card, col_edit = st.columns([0.06, 0.8, 0.14])
 
-                    with col_check:
-                        st.checkbox(
-                            "선택",
-                            key=f"check_{trade.id}",
-                            value=trade.id in st.session_state.delete_ids,
-                            label_visibility="collapsed",
-                            on_change=on_checkbox_change,
-                            args=(trade.id,)
-                        )
+                with col_check:
+                    st.checkbox(
+                        "선택",
+                        key=f"check_{trade.id}",
+                        value=trade.id in st.session_state.delete_ids,
+                        label_visibility="collapsed",
+                        on_change=on_checkbox_change,
+                        args=(trade.id,)
+                    )
 
-                    with col_content:
-                        # 펼침 가능한 상세 정보
-                        type_emoji = "🔵" if trade.trade_type == 'BUY' else "🔴"
-                        with st.expander(
-                            f"{trade.stock_name} · {type_emoji} {trade_type_str} · "
-                            f"{float(trade.price):,.0f}원 × {trade.quantity}주 · {t_profit_str}"
-                        ):
-                            col1, col2 = st.columns(2)
-                            with col1:
-                                st.markdown(f"""
-                                <div style="font-size: 14px; line-height: 2;">
-                                    <div><span style="color: #8B95A1;">종목</span> <strong>{trade.stock_name}</strong></div>
-                                    <div><span style="color: #8B95A1;">거래일</span> <strong>{trade.trade_date}</strong></div>
-                                    <div><span style="color: #8B95A1;">유형</span> <strong style="color: {trade_color};">{trade_type_str}</strong></div>
-                                    <div><span style="color: #8B95A1;">가격</span> <strong>{float(trade.price):,.0f}원 × {trade.quantity}주</strong></div>
-                                    <div><span style="color: #8B95A1;">총액</span> <strong>{float(trade.total_amount or 0):,.0f}원</strong></div>
-                                </div>
-                                """, unsafe_allow_html=True)
+                with col_card:
+                    # 매매 근거 여부에 따른 radius
+                    card_radius = "8px 8px 0 0" if trade.trade_reason else "8px"
+                    st.markdown(f"""
+                    <div style="display: flex; justify-content: space-between; align-items: center;
+                                padding: 12px 16px; background: #FFFFFF; border-radius: {card_radius};
+                                border: 1px solid #F2F3F5; border-bottom: {'none' if trade.trade_reason else '1px solid #F2F3F5'};">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="background: {trade_bg}; color: {trade_color}; padding: 4px 8px;
+                                        border-radius: 4px; font-size: 12px; font-weight: 600;">{trade_type_str}</span>
+                            <span style="font-weight: 600; color: #191F28;">{trade.stock_name}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #191F28; font-size: 14px;">{float(trade.price):,.0f}원 × {trade.quantity}주</div>
+                            <div style="font-size: 13px; color: {t_profit_color}; font-weight: 600;">{t_profit_str}</div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                            with col2:
-                                profit_info = ""
-                                if trade.profit_rate is not None:
-                                    profit_info = f"""
-                                    <div><span style="color: #8B95A1;">수익률</span> <strong style="color: {t_profit_color};">{'+' if trade.profit_rate > 0 else ''}{trade.profit_rate:.2f}%</strong></div>
-                                    <div><span style="color: #8B95A1;">손익</span> <strong style="color: {t_profit_color};">{'+' if trade.profit_loss > 0 else ''}{trade.profit_loss:,.0f}원</strong></div>
-                                    """
-                                st.markdown(f"""
-                                <div style="font-size: 14px; line-height: 2;">
-                                    <div><span style="color: #8B95A1;">확신도</span> <strong>{trade.confidence_score}/5</strong></div>
-                                    {profit_info}
-                                </div>
-                                """, unsafe_allow_html=True)
+                    # 매매 근거 표시
+                    if trade.trade_reason:
+                        st.markdown(f'<div style="padding: 8px 12px; margin-bottom: 6px; background: #F7F8FA; border-radius: 0 0 8px 8px; border: 1px solid #F2F3F5; border-top: 1px dashed #E5E8EB;"><span style="color: #8B95A1; font-size: 11px;">📝 </span><span style="color: #6B7684; font-size: 13px;">{trade.trade_reason}</span></div>', unsafe_allow_html=True)
 
-                            if trade.trade_reason:
-                                st.markdown(f"""
-                                <div style="margin-top: 12px; padding: 12px; background: #F7F8FA; border-radius: 8px; font-size: 14px;">
-                                    <div style="color: #8B95A1; margin-bottom: 4px;">매매 근거</div>
-                                    <div style="color: #191F28;">{trade.trade_reason}</div>
-                                </div>
-                                """, unsafe_allow_html=True)
-
-                            # 수정 버튼
-                            st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
-                            if st.button("✏️ 수정", key=f"edit_{trade.id}", use_container_width=True):
-                                st.session_state.edit_trade_id = trade.id
-                                st.rerun()
+                with col_edit:
+                    if st.button("수정", key=f"edit_{trade.id}", use_container_width=True):
+                        st.session_state.edit_trade_id = trade.id
+                        st.rerun()
 
         # 삭제 버튼 (선택된 항목이 있을 때만 - 리스트 하단에 표시)
         if st.session_state.delete_ids:
