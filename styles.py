@@ -364,9 +364,13 @@ TOSS_CSS = """
         color: #6B7684 !important;
         font-weight: 500 !important;
         font-size: 14px !important;
-        transition: all 0.2s ease !important;
+        transition: background 0.2s ease, color 0.2s ease !important;
         text-decoration: none !important;
         background: transparent !important;
+        height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
     }
 
     [data-testid="stSidebarNav"] li a:hover {
@@ -378,16 +382,18 @@ TOSS_CSS = """
     [data-testid="stSidebarNav"] li a[aria-current="page"],
     [data-testid="stSidebarNav"] li a[aria-selected="true"],
     [data-testid="stSidebarNav"] li[aria-selected="true"] a {
-        background: linear-gradient(135deg, #E8F3FF 0%, #D4E8FF 100%) !important;
+        background: #E8F3FF !important;
         color: #3182F6 !important;
         font-weight: 600 !important;
         border-left: 3px solid #3182F6 !important;
+        height: 44px !important;
     }
 
-    /* 아이콘 스타일 */
-    [data-testid="stSidebarNav"] li a span:first-child {
-        font-size: 16px !important;
-        margin-right: 10px !important;
+    /* 아이콘 스타일 - 파일명에 이모지 포함 */
+    [data-testid="stSidebarNav"] li a span {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
     }
 
     /* 사이드바 헤더 영역 */

@@ -39,7 +39,7 @@ trade_service = TradeService()
 report_service = ReportService()
 
 # 월 선택
-col1, col2, col3 = st.columns([1, 1, 2])
+col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
     selected_year = st.selectbox(
@@ -57,7 +57,8 @@ with col2:
     )
 
 with col3:
-    if st.button("📊 리포트 생성/갱신", type="primary"):
+    st.markdown("<div style='height: 28px'></div>", unsafe_allow_html=True)
+    if st.button("📊 리포트 생성", type="primary", use_container_width=True):
         with st.spinner("리포트 생성 중..."):
             try:
                 report = report_service.generate_monthly_report(selected_year, selected_month)

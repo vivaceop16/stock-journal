@@ -39,7 +39,7 @@ with st.form("trade_form"):
     # 기본 정보
     st.markdown('<p style="font-weight: 600; color: #191F28; margin-bottom: 16px;">기본 정보</p>', unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
         stock_name = st.text_input(
@@ -53,12 +53,15 @@ with st.form("trade_form"):
             value=date.today()
         )
 
-    with col3:
-        trade_type = st.selectbox(
-            "거래 유형 *",
-            options=["BUY", "SELL"],
-            format_func=lambda x: "매수" if x == "BUY" else "매도"
-        )
+    # 거래 유형 - 라디오 버튼
+    st.markdown('<p style="font-weight: 600; color: #191F28; margin: 24px 0 12px 0;">거래 유형 *</p>', unsafe_allow_html=True)
+    trade_type = st.radio(
+        "거래 유형",
+        options=["BUY", "SELL"],
+        format_func=lambda x: "🔵 매수" if x == "BUY" else "🔴 매도",
+        horizontal=True,
+        label_visibility="collapsed"
+    )
 
     # 거래 상세
     st.markdown('<p style="font-weight: 600; color: #191F28; margin: 24px 0 16px 0;">거래 상세</p>', unsafe_allow_html=True)
@@ -139,14 +142,14 @@ with st.form("trade_form"):
         label_visibility="collapsed"
     )
 
-    # 확신도
-    st.markdown('<p style="font-weight: 600; color: #191F28; margin: 24px 0 16px 0;">매매 확신도</p>', unsafe_allow_html=True)
-
-    confidence_score = st.select_slider(
+    # 확신도 - 라디오 버튼
+    st.markdown('<p style="font-weight: 600; color: #191F28; margin: 24px 0 12px 0;">매매 확신도 *</p>', unsafe_allow_html=True)
+    confidence_score = st.radio(
         "확신도",
         options=[1, 2, 3, 4, 5],
-        value=3,
-        format_func=lambda x: ["매우 낮음", "낮음", "보통", "높음", "매우 높음"][x-1],
+        format_func=lambda x: ["⚪ 매우 낮음", "🔵 낮음", "🟢 보통", "🟡 높음", "🔴 매우 높음"][x-1],
+        horizontal=True,
+        index=2,
         label_visibility="collapsed"
     )
 
