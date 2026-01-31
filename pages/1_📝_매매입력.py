@@ -107,39 +107,38 @@ with st.form(f"trade_form_{st.session_state.form_key}"):
         </div>
         """, unsafe_allow_html=True)
 
-    # 매도인 경우 연결할 매수 건 선택
-    linked_trade_id = None
-    if trade_type == "SELL" and stock_name:
-        st.markdown('<p style="font-weight: 600; color: #191F28; margin: 24px 0 16px 0;">매수 건 연결</p>', unsafe_allow_html=True)
-
+    # 매도인 경우 자동 연결 정보 표시
+    if trade_type == "SELL" and stock_name and price > 0:
         unlinked_buys = trade_service.get_unlinked_buys(stock_name)
 
         if unlinked_buys:
-            buy_options = {
-                f"{b.trade_date} | {b.price:,.0f}원 x {b.quantity}주": b.id
-                for b in unlinked_buys
-            }
-            selected_buy = st.selectbox(
-                "연결할 매수 건",
-                options=["선택 안함"] + list(buy_options.keys())
-            )
+            # 가장 오래된 매수 건 (자동 연결 대상)
+            oldest_buy = unlinked_buys[0]
+            profit_rate = ((price - float(oldest_buy.price)) / float(oldest_buy.price)) * 100
+            profit_loss = (price - float(oldest_buy.price)) * quantity
 
-            if selected_buy != "선택 안함":
-                linked_trade_id = buy_options[selected_buy]
-                buy_trade = next(b for b in unlinked_buys if b.id == linked_trade_id)
-                profit_rate = ((price - float(buy_trade.price)) / float(buy_trade.price)) * 100
-                profit_loss = (price - float(buy_trade.price)) * quantity
-
-                color = "#F04452" if profit_rate >= 0 else "#3182F6"
-                sign = "+" if profit_rate >= 0 else ""
-                st.markdown(f"""
-                <div style="background: {'#FFF5F5' if profit_rate >= 0 else '#F0F6FF'}; border-radius: 8px; padding: 12px 16px; margin: 8px 0;">
-                    <span style="color: #8B95A1; font-size: 13px;">예상 수익률</span>
-                    <span style="color: {color}; font-weight: 700; font-size: 18px; margin-left: 12px;">{sign}{profit_rate:.2f}% ({profit_loss:+,.0f}원)</span>
+            color = "#F04452" if profit_rate >= 0 else "#3182F6"
+            sign = "+" if profit_rate >= 0 else ""
+            st.markdown(f"""
+            <div style="background: {'#FFF5F5' if profit_rate >= 0 else '#F0F6FF'}; border-radius: 8px; padding: 12px 16px; margin: 8px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="color: #8B95A1; font-size: 12px; margin-bottom: 4px;">자동 연결 매수</div>
+                        <div style="color: #191F28; font-size: 14px; font-weight: 600;">{oldest_buy.trade_date} · {float(oldest_buy.price):,.0f}원 × {oldest_buy.quantity}주</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: #8B95A1; font-size: 12px; margin-bottom: 4px;">예상 수익</div>
+                        <div style="color: {color}; font-weight: 700; font-size: 16px;">{sign}{profit_rate:.2f}% ({profit_loss:+,.0f}원)</div>
+                    </div>
                 </div>
-                """, unsafe_allow_html=True)
+            </div>
+            """, unsafe_allow_html=True)
         else:
-            st.info("연결 가능한 매수 기록이 없습니다.")
+            st.markdown("""
+            <div style="background: #F7F8FA; border-radius: 8px; padding: 12px 16px; margin: 8px 0;">
+                <span style="color: #8B95A1; font-size: 13px;">💡 연결 가능한 매수 기록이 없어 단독 매도로 기록됩니다</span>
+            </div>
+            """, unsafe_allow_html=True)
 
     # 매매 근거
     st.markdown('<p style="font-weight: 600; color: #191F28; margin: 24px 0 16px 0;">매매 근거</p>', unsafe_allow_html=True)
@@ -184,6 +183,13 @@ with st.form(f"trade_form_{st.session_state.form_key}"):
             try:
                 score_mapping = {1: 2, 2: 4, 3: 5, 4: 7, 5: 9}
                 mapped_score = score_mapping[confidence_score]
+
+                # 매도인 경우 자동으로 가장 오래된 미연결 매수와 연결
+                linked_trade_id = None
+                if trade_type == "SELL":
+                    unlinked_buys = trade_service.get_unlinked_buys(stock_name)
+                    if unlinked_buys:
+                        linked_trade_id = unlinked_buys[0].id  # 가장 오래된 매수
 
                 trade_data = {
                     'stock_name': stock_name,
