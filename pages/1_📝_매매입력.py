@@ -39,8 +39,12 @@ if st.session_state.get('trade_saved'):
     st.success("✅ 매매가 저장되었습니다!")
     del st.session_state['trade_saved']
 
-# 입력 폼
-with st.form("trade_form"):
+# 폼 리셋을 위한 카운터
+if 'form_key' not in st.session_state:
+    st.session_state.form_key = 0
+
+# 입력 폼 (key가 변경되면 폼이 리셋됨)
+with st.form(f"trade_form_{st.session_state.form_key}"):
     # 기본 정보
     st.markdown('<p style="font-weight: 600; color: #191F28; margin-bottom: 16px;">기본 정보</p>', unsafe_allow_html=True)
 
@@ -195,6 +199,7 @@ with st.form("trade_form"):
 
                 trade = trade_service.create_trade(trade_data)
                 st.session_state['trade_saved'] = True
+                st.session_state.form_key += 1  # 폼 리셋
                 st.rerun()
 
             except Exception as e:
