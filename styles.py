@@ -392,20 +392,32 @@ TOSS_CSS = """
     [data-testid="stSidebarNav"] {
         padding: 0 !important;
         background: transparent !important;
+        transition: none !important;
     }
 
     [data-testid="stSidebarNav"] ul {
         padding: 0 8px !important;
+        transition: none !important;
     }
 
     [data-testid="stSidebarNav"] li {
         margin: 2px 0 !important;
         transition: none !important;
+        min-height: 44px !important;
+        height: 44px !important;
     }
 
     [data-testid="stSidebarNav"] li div {
         border-radius: 10px !important;
         transition: none !important;
+        min-height: 44px !important;
+        height: 44px !important;
+    }
+
+    [data-testid="stSidebarNav"] li div div {
+        transition: none !important;
+        min-height: 44px !important;
+        height: 44px !important;
     }
 
     /* 일반 상태 (선택 안됨) */
@@ -415,10 +427,12 @@ TOSS_CSS = """
         color: #6B7684 !important;
         font-weight: 500 !important;
         font-size: 14px !important;
-        transition: background 0.2s ease, color 0.2s ease !important;
+        transition: none !important;
         text-decoration: none !important;
         background: transparent !important;
         height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
         display: flex !important;
         align-items: center !important;
         box-sizing: border-box !important;
@@ -427,6 +441,7 @@ TOSS_CSS = """
     [data-testid="stSidebarNav"] li a:hover {
         background: #F2F4F6 !important;
         color: #191F28 !important;
+        height: 44px !important;
     }
 
     /* 선택된 상태 - 파란색 강조 */
@@ -438,6 +453,17 @@ TOSS_CSS = """
         font-weight: 600 !important;
         border-left: 3px solid #3182F6 !important;
         height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+    }
+
+    /* 메인 컨텐츠 상단 여백 줄이기 - Home과 라인 맞춤 */
+    .main .block-container {
+        padding-top: 2rem !important;
+    }
+
+    [data-testid="stAppViewBlockContainer"] {
+        padding-top: 2rem !important;
     }
 
     /* 아이콘 스타일 - 파일명에 이모지 포함 */
