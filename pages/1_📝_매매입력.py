@@ -43,6 +43,9 @@ if st.session_state.get('trade_saved'):
 if 'form_key' not in st.session_state:
     st.session_state.form_key = 0
 
+# 기존 종목명 목록 가져오기
+existing_stocks = trade_service.get_stock_names()
+
 # 입력 폼 (key가 변경되면 폼이 리셋됨)
 with st.form(f"trade_form_{st.session_state.form_key}"):
     # 기본 정보
@@ -51,10 +54,27 @@ with st.form(f"trade_form_{st.session_state.form_key}"):
     col1, col2 = st.columns(2)
 
     with col1:
-        stock_name = st.text_input(
-            "종목명 *",
-            placeholder="예: 삼성전자"
-        )
+        # 기존 종목 선택 또는 새 종목 입력
+        if existing_stocks:
+            stock_options = ["➕ 새 종목 입력"] + existing_stocks
+            selected_stock = st.selectbox(
+                "종목명 *",
+                options=stock_options,
+                index=0
+            )
+            if selected_stock == "➕ 새 종목 입력":
+                stock_name = st.text_input(
+                    "새 종목명",
+                    placeholder="예: 삼성전자",
+                    label_visibility="collapsed"
+                )
+            else:
+                stock_name = selected_stock
+        else:
+            stock_name = st.text_input(
+                "종목명 *",
+                placeholder="예: 삼성전자"
+            )
 
     with col2:
         trade_date = st.date_input(

@@ -4,7 +4,7 @@ from datetime import date
 from typing import List, Optional, Dict, Any
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, desc
+from sqlalchemy import and_, desc, func
 
 from database.models import Trade
 from database.connection import db_manager
@@ -85,8 +85,13 @@ class TradeService:
 
         return query.order_by(desc(Trade.trade_date), desc(Trade.id)).offset(offset).limit(limit).all()
 
+    def get_stock_names(self) -> List[str]:
+        """기존 종목명 목록 조회 (중복 제거)"""
+        results = self.session.query(Trade.stock_name).distinct().all()
+        return sorted([r[0] for r in results if r[0]])
+
     def get_unlinked_buys(self, stock_name: str) -> List[Trade]:
-        """매도와 연결되지 않은 매수 기록 조회"""
+        """매도와 연결되지 않은 매수 기록 조회 (대소문자 무시)"""
         # 이미 매도와 연결된 매수 ID 조회
         linked_buy_ids = self.session.query(Trade.linked_trade_id).filter(
             and_(
@@ -96,10 +101,10 @@ class TradeService:
         ).all()
         linked_ids = [id[0] for id in linked_buy_ids]
 
-        # 연결되지 않은 매수 조회
+        # 연결되지 않은 매수 조회 (대소문자 무시)
         query = self.session.query(Trade).filter(
             and_(
-                Trade.stock_name == stock_name,
+                func.lower(Trade.stock_name) == stock_name.lower(),
                 Trade.trade_type == 'BUY'
             )
         )

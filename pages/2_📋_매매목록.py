@@ -273,11 +273,18 @@ elif view_mode == "종목별":
     if trades:
         stock_groups = defaultdict(lambda: {
             'buys': [], 'sells': [], 'total_profit': 0,
-            'total_invested': 0, 'latest_date': None, 'trade_reasons': []
+            'total_invested': 0, 'latest_date': None, 'trade_reasons': [],
+            'display_name': None  # 실제 표시될 종목명
         })
 
         for trade in trades:
-            stock_data = stock_groups[trade.stock_name]
+            # 대소문자 무시하고 같은 종목으로 그룹화
+            stock_key = trade.stock_name.upper()
+            stock_data = stock_groups[stock_key]
+
+            # 표시 이름 설정 (첫 번째 거래의 종목명 사용)
+            if stock_data['display_name'] is None:
+                stock_data['display_name'] = trade.stock_name
 
             # 최근 거래일 업데이트
             if stock_data['latest_date'] is None or trade.trade_date > stock_data['latest_date']:
@@ -302,7 +309,8 @@ elif view_mode == "종목별":
         # 최신 거래일 기준 정렬
         sorted_stocks = sorted(stock_groups.items(), key=lambda x: x[1]['latest_date'] or date.min, reverse=True)
 
-        for stock_name, data in sorted_stocks:
+        for stock_key, data in sorted_stocks:
+            stock_name = data['display_name']
             buys = data['buys']
             sells = data['sells']
             total_profit = data['total_profit']
