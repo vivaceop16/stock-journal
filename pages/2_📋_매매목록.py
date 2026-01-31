@@ -322,29 +322,8 @@ elif view_mode == "종목별":
             # 평단가 계산 (총 매수금액 / 총 매수수량)
             avg_price = data['total_invested'] / total_buy_qty if total_buy_qty > 0 else 0
 
-            # 요약 카드 스타일
-            st.markdown(f"""
-            <div style="background: #FFFFFF; border-radius: 12px; padding: 16px 20px; margin-bottom: 8px;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #E5E8EB;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 17px; font-weight: 700; color: #191F28;">{stock_name}</span>
-                        <span style="font-size: 13px; color: #8B95A1;">{latest_date}</span>
-                    </div>
-                    <div style="display: flex; gap: 16px; align-items: center;">
-                        <span style="font-size: 13px;">
-                            <span style="color: #3182F6; font-weight: 600;">매수 {len(buys)}회</span>
-                            <span style="color: #B0B8C1; margin: 0 4px;">·</span>
-                            <span style="color: #F04452; font-weight: 600;">매도 {len(sells)}회</span>
-                        </span>
-                        <span style="font-size: 14px; color: #191F28; font-weight: 600;">평단가 {avg_price:,.0f}원</span>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # 상세 내역 (펼침)
-            with st.expander(f"📋 {stock_name} 상세 내역", expanded=False):
+            # 종목 카드 + 상세 내역 통합 (expander로)
+            with st.expander(f"**{stock_name}** · {latest_date} · 매수 {len(buys)}회 / 매도 {len(sells)}회 · 평단가 {avg_price:,.0f}원", expanded=False):
                 # 거래 내역 - 날짜별 그룹화
                 all_stock_trades = buys + sells
                 date_grouped = defaultdict(list)
