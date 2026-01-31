@@ -414,15 +414,12 @@ TOSS_CSS = """
 
     /* 첫번째 메뉴(app)를 Home으로 표시 */
     [data-testid="stSidebarNav"] li:first-child a span {
-        visibility: hidden;
-        position: relative;
+        font-size: 0 !important;
     }
 
-    [data-testid="stSidebarNav"] li:first-child a span::after {
+    [data-testid="stSidebarNav"] li:first-child a span::before {
         content: "🏠 Home";
-        visibility: visible;
-        position: absolute;
-        left: 0;
+        font-size: 14px !important;
     }
 
     /* 사이드바 헤더 영역 */
