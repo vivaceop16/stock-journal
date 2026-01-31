@@ -556,6 +556,58 @@ TOSS_CSS = """
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
+    /* ===== Material Icons 폰트 미로드 시 fallback 텍스트 숨김 ===== */
+
+    /* 1. 사이드바 토글 버튼 - keyboard_double_arrow 숨김 */
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"],
+    button[data-testid="stBaseButton-headerNoPadding"] {
+        font-size: 0 !important;
+        overflow: hidden !important;
+    }
+
+    [data-testid="collapsedControl"] *,
+    [data-testid="stSidebarCollapseButton"] * {
+        font-size: 0 !important;
+    }
+
+    /* 2. Expander 화살표 아이콘 영역 - expand_more/expand_less 숨김 */
+    [data-testid="stExpander"] summary [data-testid="stIconMaterial"],
+    [data-testid="stExpander"] [data-testid="stExpanderToggleIcon"] {
+        font-size: 0 !important;
+        width: 20px !important;
+        height: 20px !important;
+        overflow: hidden !important;
+    }
+
+    /* 3. Material Icon span 텍스트 전역 숨김 */
+    span[data-testid="stIconMaterial"] {
+        font-size: 0 !important;
+        line-height: 0 !important;
+    }
+
+    /* 4. 화살표 아이콘 대체 - CSS로 표시 */
+    [data-testid="stExpander"] summary [data-testid="stIconMaterial"]::before,
+    [data-testid="stExpander"] [data-testid="stExpanderToggleIcon"]::before {
+        content: "▼" !important;
+        font-size: 10px !important;
+        color: #8B95A1 !important;
+        display: block !important;
+    }
+
+    [data-testid="stExpander"][open] summary [data-testid="stIconMaterial"]::before,
+    [data-testid="stExpander"][open] [data-testid="stExpanderToggleIcon"]::before {
+        content: "▲" !important;
+    }
+
+    /* 5. 사이드바 토글 아이콘 대체 */
+    [data-testid="collapsedControl"]::before,
+    [data-testid="stSidebarCollapseButton"]::before {
+        content: "☰" !important;
+        font-size: 16px !important;
+        color: #6B7684 !important;
+    }
+
     /* 반응형 */
     @media (max-width: 768px) {
         .toss-card-value {
