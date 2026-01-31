@@ -24,6 +24,8 @@ class TradeService:
 
     def create_trade(self, trade_data: Dict[str, Any]) -> Trade:
         """새 매매 기록 생성"""
+        session = self.session  # 세션을 먼저 가져옴
+
         # 총 거래금액 계산
         price = Decimal(str(trade_data['price']))
         quantity = trade_data['quantity']
@@ -42,13 +44,15 @@ class TradeService:
             linked_trade_id=trade_data.get('linked_trade_id'),
         )
 
-        # 매도 거래인 경우 수익 계산
+        # 매도 거래인 경우 수익 계산 (같은 세션 사용)
         if trade.trade_type == 'SELL' and trade.linked_trade_id:
-            profit_info = self._calculate_profit(trade)
-            trade.profit_loss = profit_info['profit_loss']
-            trade.profit_rate = profit_info['profit_rate']
+            buy_trade = session.query(Trade).filter(Trade.id == trade.linked_trade_id).first()
+            if buy_trade and buy_trade.price > 0:
+                profit_loss = (price - buy_trade.price) * quantity
+                profit_rate = ((price - buy_trade.price) / buy_trade.price) * 100
+                trade.profit_loss = profit_loss
+                trade.profit_rate = profit_rate
 
-        session = self.session
         session.add(trade)
         session.commit()
         session.refresh(trade)
