@@ -29,17 +29,7 @@ initialize_database()
 
 # 사이드바 - API 키 설정
 with st.sidebar:
-    st.markdown("""
-    <div style="padding: 16px 8px 24px 8px; border-bottom: 1px solid #E5E8EB; margin-bottom: 16px;">
-        <h2 style="font-size: 18px; font-weight: 700; color: #191F28; margin: 0;">📈 매매일지</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style="padding: 0 8px;">
-        <p style="font-size: 12px; color: #8B95A1; margin-bottom: 8px;">설정</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
 
     if 'openai_api_key' not in st.session_state:
         st.session_state.openai_api_key = ''
