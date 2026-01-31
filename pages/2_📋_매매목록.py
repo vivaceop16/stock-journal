@@ -156,7 +156,7 @@ col_view, col_filter1, col_filter2, col_filter3 = st.columns([1.5, 1, 1, 1])
 with col_view:
     view_mode = st.selectbox(
         "보기",
-        options=["전체 목록", "종목별", "날짜별"],
+        options=["종목별", "전체 목록", "날짜별"],
         label_visibility="collapsed"
     )
 
