@@ -88,10 +88,14 @@ TOSS_CSS = """
     }
 
     .summary-card-value {
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 700;
         color: #191F28;
         margin-bottom: 4px;
+        word-break: keep-all;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .summary-card-value.positive {
@@ -100,6 +104,13 @@ TOSS_CSS = """
 
     .summary-card-value.negative {
         color: #3182F6;
+    }
+
+    /* 반응형 - 작은 화면에서 폰트 크기 조정 */
+    @media (max-width: 1200px) {
+        .summary-card-value {
+            font-size: 18px;
+        }
     }
 
     .summary-card-label {
