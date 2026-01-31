@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from database import init_db
 from services import TradeService
-from styles import apply_toss_style, data_table_header, data_table_row
+from styles import apply_toss_style, data_table_row
 
 # 페이지 설정
 st.set_page_config(page_title="매매 목록", page_icon="📋", layout="wide")
@@ -225,64 +225,93 @@ elif view_mode == "종목별":
 # ========== 전체 목록 ==========
 else:
     if trades:
-        # 대시보드 스타일 테이블
-        st.markdown('<div class="data-table">', unsafe_allow_html=True)
-        data_table_header()
+        # 삭제할 항목 저장
+        if 'delete_ids' not in st.session_state:
+            st.session_state.delete_ids = set()
 
+        # 삭제 버튼 (선택된 항목이 있을 때만)
+        col_del1, col_del2 = st.columns([3, 1])
+        with col_del2:
+            if st.session_state.delete_ids:
+                if st.button(f"🗑️ {len(st.session_state.delete_ids)}건 삭제", type="secondary", use_container_width=True):
+                    for del_id in st.session_state.delete_ids:
+                        trade_service.delete_trade(del_id)
+                    st.session_state.delete_ids = set()
+                    st.success("삭제되었습니다.")
+                    st.rerun()
+
+        # 거래 목록 (체크박스 + 펼침 상세)
         for trade in trades:
-            trade_type = "buy" if trade.trade_type == "BUY" else "sell"
+            trade_type_str = "매수" if trade.trade_type == "BUY" else "매도"
+            trade_color = "#3182F6" if trade.trade_type == "BUY" else "#F04452"
 
             if trade.profit_rate is not None:
                 rate = float(trade.profit_rate)
                 profit_loss = float(trade.profit_loss or 0)
                 profit_str = f"{'+' if rate > 0 else ''}{profit_loss:,.0f}원"
-                profit_type = "positive" if rate > 0 else "negative"
+                profit_color = "#F04452" if rate > 0 else "#3182F6"
             else:
                 profit_str = "-"
-                profit_type = "neutral"
+                profit_color = "#8B95A1"
 
-            data_table_row(
-                stock_name=trade.stock_name,
-                trade_date=str(trade.trade_date),
-                price=f"{float(trade.price):,.0f}원",
-                quantity=f"{trade.quantity}주",
-                profit=profit_str,
-                trade_type=trade_type,
-                profit_type=profit_type
-            )
+            # 카드 스타일 컨테이너
+            with st.container():
+                col_check, col_content = st.columns([0.08, 0.92])
 
-        st.markdown('</div>', unsafe_allow_html=True)
+                with col_check:
+                    is_checked = st.checkbox(
+                        "선택",
+                        key=f"check_{trade.id}",
+                        value=trade.id in st.session_state.delete_ids,
+                        label_visibility="collapsed"
+                    )
+                    if is_checked:
+                        st.session_state.delete_ids.add(trade.id)
+                    elif trade.id in st.session_state.delete_ids:
+                        st.session_state.delete_ids.discard(trade.id)
 
-        # 상세 보기 (접을 수 있게)
-        with st.expander("🔎 상세 보기 / 삭제"):
-            selected_id = st.selectbox(
-                "매매 선택",
-                options=[t.id for t in trades],
-                format_func=lambda x: f"#{x} - {next(t.stock_name for t in trades if t.id == x)} ({next(t.trade_date for t in trades if t.id == x)})"
-            )
+                with col_content:
+                    # 펼침 가능한 상세 정보
+                    with st.expander(
+                        f"**{trade.stock_name}** · {trade.trade_date} · "
+                        f":{'blue' if trade.trade_type == 'BUY' else 'red'}[{trade_type_str}] · "
+                        f"{float(trade.price):,.0f}원 × {trade.quantity}주 · "
+                        f":{('red' if trade.profit_rate and trade.profit_rate > 0 else 'blue') if trade.profit_rate else 'gray'}[{profit_str}]"
+                    ):
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown(f"""
+                            <div style="font-size: 14px; line-height: 2;">
+                                <div><span style="color: #8B95A1;">종목</span> <strong>{trade.stock_name}</strong></div>
+                                <div><span style="color: #8B95A1;">거래일</span> <strong>{trade.trade_date}</strong></div>
+                                <div><span style="color: #8B95A1;">유형</span> <strong style="color: {trade_color};">{trade_type_str}</strong></div>
+                                <div><span style="color: #8B95A1;">가격</span> <strong>{float(trade.price):,.0f}원 × {trade.quantity}주</strong></div>
+                                <div><span style="color: #8B95A1;">총액</span> <strong>{float(trade.total_amount or 0):,.0f}원</strong></div>
+                            </div>
+                            """, unsafe_allow_html=True)
 
-            if selected_id:
-                selected_trade = next(t for t in trades if t.id == selected_id)
+                        with col2:
+                            profit_info = ""
+                            if trade.profit_rate is not None:
+                                profit_info = f"""
+                                <div><span style="color: #8B95A1;">수익률</span> <strong style="color: {profit_color};">{'+' if trade.profit_rate > 0 else ''}{trade.profit_rate:.2f}%</strong></div>
+                                <div><span style="color: #8B95A1;">손익</span> <strong style="color: {profit_color};">{'+' if trade.profit_loss > 0 else ''}{trade.profit_loss:,.0f}원</strong></div>
+                                """
+                            st.markdown(f"""
+                            <div style="font-size: 14px; line-height: 2;">
+                                <div><span style="color: #8B95A1;">확신도</span> <strong>{trade.confidence_score}/5</strong></div>
+                                {profit_info}
+                            </div>
+                            """, unsafe_allow_html=True)
 
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write(f"**종목:** {selected_trade.stock_name}")
-                    st.write(f"**거래일:** {selected_trade.trade_date}")
-                    st.write(f"**유형:** {'매수' if selected_trade.trade_type == 'BUY' else '매도'}")
-                    st.write(f"**가격:** {selected_trade.price:,.0f}원 × {selected_trade.quantity}주")
+                        if trade.trade_reason:
+                            st.markdown(f"""
+                            <div style="margin-top: 12px; padding: 12px; background: #F7F8FA; border-radius: 8px; font-size: 14px;">
+                                <div style="color: #8B95A1; margin-bottom: 4px;">매매 근거</div>
+                                <div style="color: #191F28;">{trade.trade_reason}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
 
-                with col2:
-                    st.write(f"**확신도:** {selected_trade.confidence_score}/10")
-                    if selected_trade.profit_rate is not None:
-                        st.write(f"**수익률:** {selected_trade.profit_rate:.2f}%")
-                        st.write(f"**손익:** {selected_trade.profit_loss:+,.0f}원")
-
-                st.text_area("매매 근거", value=selected_trade.trade_reason, height=100, disabled=True)
-
-                if st.button("🗑️ 삭제", type="secondary"):
-                    if trade_service.delete_trade(selected_id):
-                        st.success("삭제되었습니다.")
-                        st.rerun()
     else:
         st.markdown("""
         <div style="text-align: center; padding: 60px 20px; background: #FFFFFF;
