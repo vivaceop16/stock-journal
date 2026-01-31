@@ -42,6 +42,60 @@ TOSS_CSS = """
         color: #3182F6;
     }
 
+    /* 요약 카드 (상단 대시보드용) */
+    .summary-card {
+        background: #FFFFFF;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        border: 1px solid #E5E8EB;
+    }
+
+    .summary-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px auto;
+        font-size: 24px;
+    }
+
+    .summary-card-icon.blue {
+        background: #E8F3FF;
+    }
+
+    .summary-card-icon.red {
+        background: #FFEFEF;
+    }
+
+    .summary-card-icon.green {
+        background: #E8F8F0;
+    }
+
+    .summary-card-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #191F28;
+        margin-bottom: 4px;
+    }
+
+    .summary-card-value.positive {
+        color: #F04452;
+    }
+
+    .summary-card-value.negative {
+        color: #3182F6;
+    }
+
+    .summary-card-label {
+        font-size: 13px;
+        color: #8B95A1;
+        font-weight: 500;
+    }
+
     /* 리스트 아이템 */
     .toss-list-item {
         background: #FFFFFF;
@@ -92,6 +146,109 @@ TOSS_CSS = """
     .toss-list-change {
         font-size: 13px;
         color: #8B95A1;
+    }
+
+    /* 테이블 스타일 */
+    .data-table {
+        width: 100%;
+        background: #FFFFFF;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .data-table-header {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 0.8fr;
+        padding: 14px 20px;
+        background: #F8F9FA;
+        border-bottom: 1px solid #E5E8EB;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6B7684;
+    }
+
+    .data-table-row {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 0.8fr;
+        padding: 16px 20px;
+        border-bottom: 1px solid #F2F3F5;
+        align-items: center;
+        transition: background 0.15s ease;
+    }
+
+    .data-table-row:hover {
+        background: #F8F9FA;
+    }
+
+    .data-table-row:last-child {
+        border-bottom: none;
+    }
+
+    .table-stock-name {
+        font-weight: 600;
+        color: #191F28;
+    }
+
+    .table-date {
+        color: #6B7684;
+        font-size: 14px;
+    }
+
+    .table-price {
+        font-weight: 500;
+        color: #191F28;
+    }
+
+    .table-quantity {
+        color: #6B7684;
+    }
+
+    .table-profit {
+        font-weight: 600;
+    }
+
+    .table-profit.positive {
+        color: #F04452;
+    }
+
+    .table-profit.negative {
+        color: #3182F6;
+    }
+
+    /* 상태 뱃지 */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-badge.buy {
+        background: #E8F3FF;
+        color: #3182F6;
+    }
+
+    .status-badge.sell {
+        background: #FFEFEF;
+        color: #F04452;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .status-dot.buy {
+        background: #3182F6;
+    }
+
+    .status-dot.sell {
+        background: #F04452;
     }
 
     /* 섹션 타이틀 */
@@ -159,9 +316,93 @@ TOSS_CSS = """
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
-    /* 사이드바 */
+    /* 사이드바 스타일 */
     [data-testid="stSidebar"] {
         background: #FFFFFF;
+        border-right: 1px solid #E5E8EB;
+    }
+
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+        font-size: 14px;
+    }
+
+    /* Streamlit 사이드바 네비게이션 - 전체 스타일 */
+    [data-testid="stSidebarNav"] {
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    [data-testid="stSidebarNav"] ul {
+        padding: 0 8px !important;
+    }
+
+    [data-testid="stSidebarNav"] li {
+        margin: 2px 0 !important;
+    }
+
+    [data-testid="stSidebarNav"] li div {
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    /* 일반 상태 (선택 안됨) */
+    [data-testid="stSidebarNav"] li a {
+        padding: 12px 16px !important;
+        border-radius: 10px !important;
+        color: #6B7684 !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        transition: all 0.2s ease !important;
+        text-decoration: none !important;
+        background: transparent !important;
+    }
+
+    [data-testid="stSidebarNav"] li a:hover {
+        background: #F2F4F6 !important;
+        color: #191F28 !important;
+    }
+
+    /* 선택된 상태 - 파란색 강조 */
+    [data-testid="stSidebarNav"] li a[aria-current="page"],
+    [data-testid="stSidebarNav"] li a[aria-selected="true"],
+    [data-testid="stSidebarNav"] li[aria-selected="true"] a {
+        background: linear-gradient(135deg, #E8F3FF 0%, #D4E8FF 100%) !important;
+        color: #3182F6 !important;
+        font-weight: 600 !important;
+        border-left: 3px solid #3182F6 !important;
+    }
+
+    /* 아이콘 스타일 */
+    [data-testid="stSidebarNav"] li a span:first-child {
+        font-size: 16px !important;
+        margin-right: 10px !important;
+    }
+
+    /* 사이드바 헤더 영역 */
+    .sidebar-header {
+        padding: 20px 16px;
+        border-bottom: 1px solid #E5E8EB;
+        margin-bottom: 8px;
+    }
+
+    .sidebar-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #191F28;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* 사이드바 섹션 라벨 */
+    .sidebar-section-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #8B95A1;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 16px 16px 8px 16px;
     }
 
     /* Expander 스타일 */
@@ -189,6 +430,14 @@ TOSS_CSS = """
     @media (max-width: 768px) {
         .toss-card-value {
             font-size: 24px;
+        }
+        .summary-card-value {
+            font-size: 20px;
+        }
+        .data-table-header,
+        .data-table-row {
+            grid-template-columns: 1fr 1fr 1fr;
+            font-size: 12px;
         }
     }
 </style>
@@ -252,3 +501,79 @@ def toss_badge(text: str, badge_type: str = "buy"):
         badge_type: "buy" 또는 "sell"
     """
     return f'<span class="toss-badge {badge_type}">{text}</span>'
+
+
+def summary_card(icon: str, value: str, label: str, icon_color: str = "blue", value_type: str = "neutral"):
+    """상단 요약 카드
+
+    Args:
+        icon: 이모지 아이콘
+        value: 표시할 값
+        label: 라벨
+        icon_color: "blue", "red", "green"
+        value_type: "positive", "negative", "neutral"
+    """
+    value_class = value_type if value_type in ["positive", "negative"] else ""
+
+    st.markdown(f"""
+    <div class="summary-card">
+        <div class="summary-card-icon {icon_color}">{icon}</div>
+        <div class="summary-card-value {value_class}">{value}</div>
+        <div class="summary-card-label">{label}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def status_badge(text: str, badge_type: str = "buy"):
+    """상태 뱃지 (점 포함)
+
+    Args:
+        text: 뱃지 텍스트
+        badge_type: "buy" 또는 "sell"
+    """
+    return f'''<span class="status-badge {badge_type}">
+        <span class="status-dot {badge_type}"></span>
+        {text}
+    </span>'''
+
+
+def data_table_header():
+    """테이블 헤더"""
+    st.markdown("""
+    <div class="data-table-header">
+        <div>종목명</div>
+        <div>거래일</div>
+        <div>거래가</div>
+        <div>수량</div>
+        <div>손익</div>
+        <div>유형</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+def data_table_row(stock_name: str, trade_date: str, price: str, quantity: str,
+                   profit: str, trade_type: str, profit_type: str = "neutral"):
+    """테이블 행
+
+    Args:
+        stock_name: 종목명
+        trade_date: 거래일
+        price: 거래가
+        quantity: 수량
+        profit: 손익
+        trade_type: "buy" 또는 "sell"
+        profit_type: "positive", "negative", "neutral"
+    """
+    profit_class = profit_type if profit_type in ["positive", "negative"] else ""
+    badge = status_badge("매수" if trade_type == "buy" else "매도", trade_type)
+
+    st.markdown(f"""
+    <div class="data-table-row">
+        <div class="table-stock-name">{stock_name}</div>
+        <div class="table-date">{trade_date}</div>
+        <div class="table-price">{price}</div>
+        <div class="table-quantity">{quantity}</div>
+        <div class="table-profit {profit_class}">{profit}</div>
+        <div>{badge}</div>
+    </div>
+    """, unsafe_allow_html=True)
