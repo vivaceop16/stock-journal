@@ -144,12 +144,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 상단 컨트롤 영역 (보기모드 + 필터)
-st.markdown("""
-<div style="background: #FFFFFF; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #E5E8EB;">
-""", unsafe_allow_html=True)
-
 # 정렬/보기 모드 + 필터를 한 줄에
 col_view, col_filter1, col_filter2, col_filter3 = st.columns([1.5, 1, 1, 1])
 
@@ -177,8 +171,6 @@ with col_filter3:
         index=1,
         label_visibility="collapsed"
     )
-
-st.markdown("</div>", unsafe_allow_html=True)
 
 # 기간 계산
 date_map = {

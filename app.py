@@ -138,7 +138,7 @@ try:
 
             st.markdown(f"""
             <div style="display: flex; justify-content: space-between; align-items: center;
-                        padding: 10px 0; border-bottom: 1px solid #E5E8EB; margin-top: 8px;">
+                        padding: 10px 0; margin-top: 8px;">
                 <span style="font-weight: 600; color: #191F28; font-size: 14px;">{trade_date}</span>
                 {profit_str}
             </div>

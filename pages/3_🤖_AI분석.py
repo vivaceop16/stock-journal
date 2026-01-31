@@ -75,71 +75,69 @@ if st.session_state.get('run_analysis') and selected_trade:
             st.code(traceback.format_exc())
             st.session_state['run_analysis'] = False
 
-# 매매 목록 게시판 형태
-st.markdown("""
-<div style="background: #FFFFFF; border-radius: 12px; overflow: hidden; border: 1px solid #E5E8EB; margin-bottom: 24px;">
-""", unsafe_allow_html=True)
+# 매매 목록 - 홈 스타일로 표시
+from collections import defaultdict
 
-# 헤더
-col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([0.9, 1.5, 0.7, 1, 1, 0.7])
-with col_h1:
-    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">날짜</div>', unsafe_allow_html=True)
-with col_h2:
-    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">종목</div>', unsafe_allow_html=True)
-with col_h3:
-    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">유형</div>', unsafe_allow_html=True)
-with col_h4:
-    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">가격</div>', unsafe_allow_html=True)
-with col_h5:
-    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">손익</div>', unsafe_allow_html=True)
-with col_h6:
-    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0; text-align: center;">분석</div>', unsafe_allow_html=True)
-
-st.markdown('<div style="border-bottom: 1px solid #E5E8EB;"></div>', unsafe_allow_html=True)
-
+# 날짜별 그룹화
+date_groups = defaultdict(list)
 for trade in recent_trades:
-    trade_type_str = "매수" if trade.trade_type == "BUY" else "매도"
-    trade_color = "#3182F6" if trade.trade_type == "BUY" else "#F04452"
-    trade_bg = "#E8F3FF" if trade.trade_type == "BUY" else "#FFEFEF"
+    date_groups[trade.trade_date].append(trade)
 
-    # 손익 표시
-    if trade.profit_rate is not None:
-        profit_color = "#F04452" if trade.profit_rate > 0 else "#3182F6"
-        profit_str = f"{'+' if trade.profit_rate > 0 else ''}{float(trade.profit_loss):,.0f}원"
-    else:
-        profit_color = "#8B95A1"
-        profit_str = "-"
+for trade_date, trades in sorted(date_groups.items(), reverse=True):
+    # 날짜 헤더
+    st.markdown(f"""
+    <div style="display: flex; justify-content: space-between; align-items: center;
+                padding: 10px 0; margin-top: 8px;">
+        <span style="font-weight: 600; color: #191F28; font-size: 14px;">{trade_date}</span>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # 기존 분석 여부 확인
-    has_analysis = ai_analyzer.get_analysis_for_trade(trade.id) is not None
+    # 해당 날짜의 거래들
+    for trade in trades:
+        trade_type_str = "매수" if trade.trade_type == "BUY" else "매도"
+        trade_color = "#3182F6" if trade.trade_type == "BUY" else "#F04452"
+        trade_bg = "#E8F3FF" if trade.trade_type == "BUY" else "#FFEFEF"
 
-    # 선택된 행 하이라이트
-    row_bg = "#F0F6FF" if selected_trade_id == trade.id else "#FFFFFF"
+        # 손익 표시
+        profit_info = ""
+        if trade.profit_rate is not None:
+            rate = float(trade.profit_rate)
+            p_color = "#F04452" if rate > 0 else "#3182F6"
+            p_sign = "+" if rate > 0 else ""
+            profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{float(trade.profit_loss):,.0f}원</span>'
 
-    # 각 행을 컨테이너로
-    with st.container():
-        col1, col2, col3, col4, col5, col6 = st.columns([0.9, 1.5, 0.7, 1, 1, 0.7])
+        # 기존 분석 여부 확인
+        has_analysis = ai_analyzer.get_analysis_for_trade(trade.id) is not None
 
-        with col1:
-            st.markdown(f'<div style="color: #6B7684; font-size: 14px; padding: 8px 0;">{trade.trade_date}</div>', unsafe_allow_html=True)
-        with col2:
-            st.markdown(f'<div style="font-weight: 600; color: #191F28; padding: 8px 0;">{trade.stock_name}</div>', unsafe_allow_html=True)
-        with col3:
-            st.markdown(f'<div style="padding: 8px 0;"><span style="background: {trade_bg}; color: {trade_color}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">{trade_type_str}</span></div>', unsafe_allow_html=True)
-        with col4:
-            st.markdown(f'<div style="color: #191F28; padding: 8px 0;">{float(trade.price):,.0f}원</div>', unsafe_allow_html=True)
-        with col5:
-            st.markdown(f'<div style="color: {profit_color}; font-weight: 600; padding: 8px 0;">{profit_str}</div>', unsafe_allow_html=True)
-        with col6:
+        # 선택된 카드 하이라이트
+        card_border = "#3182F6" if selected_trade_id == trade.id else "#F2F3F5"
+        card_bg = "#F8FAFF" if selected_trade_id == trade.id else "#FFFFFF"
+
+        col_card, col_btn = st.columns([4, 1])
+
+        with col_card:
+            st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; align-items: center;
+                        padding: 12px 16px; background: {card_bg}; border-radius: 8px;
+                        margin: 6px 0; border: 1px solid {card_border};">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="background: {trade_bg}; color: {trade_color}; padding: 4px 8px;
+                                border-radius: 4px; font-size: 12px; font-weight: 600;">{trade_type_str}</span>
+                    <span style="font-weight: 600; color: #191F28;">{trade.stock_name}</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: #191F28; font-size: 14px;">{float(trade.price):,.0f}원 × {trade.quantity}주</div>
+                    <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col_btn:
             btn_label = "🔄 재분석" if has_analysis else "🔍 분석"
             if st.button(btn_label, key=f"analyze_{trade.id}", use_container_width=True):
                 st.session_state['analyze_trade_id'] = trade.id
                 st.session_state['run_analysis'] = True
                 st.rerun()
-
-    st.markdown('<div style="border-bottom: 1px solid #F2F3F5;"></div>', unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
 
 # 선택된 매매 정보 표시
 if selected_trade:
