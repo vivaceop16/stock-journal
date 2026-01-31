@@ -349,34 +349,13 @@ elif view_mode == "종목별":
                             p_color = "#F04452" if t.profit_loss > 0 else "#3182F6"
                             profit_info = f'<span style="color: {p_color}; font-weight: 600; margin-left: 8px;">{t.profit_loss:+,.0f}원</span>'
 
-                        # 매매 근거 표시
-                        reason_html = ""
-                        if t.trade_reason:
-                            reason_html = f'''
-                            <div style="padding: 8px 12px; margin: 0 0 8px 0; background: #F7F8FA;
-                                        border-radius: 0 0 6px 6px; border-top: 1px dashed #E5E8EB;">
-                                <span style="color: #8B95A1; font-size: 11px;">📝 </span>
-                                <span style="color: #6B7684; font-size: 13px; line-height: 1.5;">{t.trade_reason}</span>
-                            </div>
-                            '''
+                        # 거래 정보 표시
+                        trade_radius = "6px 6px 0 0" if t.trade_reason else "6px"
+                        st.markdown(f'<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #FAFBFC; border-radius: {trade_radius}; margin-top: 4px;"><div style="display: flex; align-items: center; gap: 10px;"><span style="background: {t_bg}; color: {t_color}; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">{t_type}</span><span style="color: #191F28; font-size: 14px;">{float(t.price):,.0f}원 × {t.quantity}주</span></div><div><span style="color: #6B7684; font-size: 13px;">{float(t.total_amount or 0):,.0f}원</span>{profit_info}</div></div>', unsafe_allow_html=True)
 
-                        st.markdown(f"""
-                        <div style="margin: 4px 0 {'0' if t.trade_reason else '4px'} 0;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;
-                                        padding: 10px 12px; background: #FAFBFC; border-radius: {'6px 6px 0 0' if t.trade_reason else '6px'};">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span style="background: {t_bg}; color: {t_color}; padding: 3px 8px;
-                                                border-radius: 4px; font-size: 12px; font-weight: 600;">{t_type}</span>
-                                    <span style="color: #191F28; font-size: 14px;">{float(t.price):,.0f}원 × {t.quantity}주</span>
-                                </div>
-                                <div>
-                                    <span style="color: #6B7684; font-size: 13px;">{float(t.total_amount or 0):,.0f}원</span>
-                                    {profit_info}
-                                </div>
-                            </div>
-                            {reason_html}
-                        </div>
-                        """, unsafe_allow_html=True)
+                        # 매매 근거 표시 (별도 마크다운)
+                        if t.trade_reason:
+                            st.markdown(f'<div style="padding: 8px 12px; margin: 0 0 8px 0; background: #F7F8FA; border-radius: 0 0 6px 6px; border-top: 1px dashed #E5E8EB;"><span style="color: #8B95A1; font-size: 11px;">📝 </span><span style="color: #6B7684; font-size: 13px; line-height: 1.5;">{t.trade_reason}</span></div>', unsafe_allow_html=True)
 
                 # 손익 요약
                 if total_profit != 0:
