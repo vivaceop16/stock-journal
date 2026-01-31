@@ -412,6 +412,19 @@ TOSS_CSS = """
         gap: 8px !important;
     }
 
+    /* 첫번째 메뉴(app)를 Home으로 표시 */
+    [data-testid="stSidebarNav"] li:first-child a span {
+        visibility: hidden;
+        position: relative;
+    }
+
+    [data-testid="stSidebarNav"] li:first-child a span::after {
+        content: "🏠 Home";
+        visibility: visible;
+        position: absolute;
+        left: 0;
+    }
+
     /* 사이드바 헤더 영역 */
     .sidebar-header {
         padding: 20px 16px;

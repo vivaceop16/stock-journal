@@ -1,5 +1,5 @@
 [[pages]]
-path = "Home.py"
+path = "app.py"
 name = "🏠 Home"
 icon = "🏠"
 
