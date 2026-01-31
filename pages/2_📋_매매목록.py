@@ -29,7 +29,7 @@ if st.session_state.get('trade_updated'):
     del st.session_state['trade_updated']
 
 # 수정 모달 (다이얼로그)
-@st.dialog("매매 수정")
+@st.dialog("매매 수정", width="large")
 def edit_trade_dialog(trade_id):
     trade = trade_service.get_trade(trade_id)
     if not trade:
@@ -59,6 +59,36 @@ def edit_trade_dialog(trade_id):
         with col2:
             new_quantity = st.number_input("수량 (주)", value=trade.quantity, min_value=1, step=1)
 
+        # 매도인 경우 매수 건 연결 (수익 계산용)
+        new_linked_trade_id = trade.linked_trade_id
+        if new_trade_type == "SELL":
+            # 해당 종목의 매수 거래 목록 가져오기
+            all_buys = trade_service.list_trades(
+                stock_name=new_stock_name,
+                trade_type="BUY",
+                limit=100
+            )
+            if all_buys:
+                buy_options = {"선택 안함": None}
+                for b in all_buys:
+                    label = f"{b.trade_date} | {float(b.price):,.0f}원 × {b.quantity}주"
+                    buy_options[label] = b.id
+
+                # 현재 연결된 매수 찾기
+                current_selection = "선택 안함"
+                if trade.linked_trade_id:
+                    for label, bid in buy_options.items():
+                        if bid == trade.linked_trade_id:
+                            current_selection = label
+                            break
+
+                selected_buy = st.selectbox(
+                    "연결할 매수 건 (수익 계산)",
+                    options=list(buy_options.keys()),
+                    index=list(buy_options.keys()).index(current_selection) if current_selection in buy_options else 0
+                )
+                new_linked_trade_id = buy_options[selected_buy]
+
         new_trade_reason = st.text_area("매매 근거", value=trade.trade_reason or "", height=100)
 
         # 확신도 (1-5를 score로 변환: 2,4,5,7,9)
@@ -87,7 +117,8 @@ def edit_trade_dialog(trade_id):
                 'price': new_price,
                 'quantity': new_quantity,
                 'trade_reason': new_trade_reason,
-                'confidence_score': score_mapping[new_confidence]
+                'confidence_score': score_mapping[new_confidence],
+                'linked_trade_id': new_linked_trade_id
             }
             trade_service.update_trade(trade_id, update_data)
             st.session_state['trade_updated'] = True
