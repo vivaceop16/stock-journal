@@ -212,6 +212,17 @@ if trades:
     </div>
     """, unsafe_allow_html=True)
 
+# 삭제할 항목 저장 (모든 뷰에서 공통 사용)
+if 'delete_ids' not in st.session_state:
+    st.session_state.delete_ids = set()
+
+# 체크박스 콜백 함수 (모든 뷰에서 공통 사용)
+def on_checkbox_change(trade_id):
+    if st.session_state.get(f"check_{trade_id}") or st.session_state.get(f"check_stock_{trade_id}"):
+        st.session_state.delete_ids.add(trade_id)
+    else:
+        st.session_state.delete_ids.discard(trade_id)
+
 # ========== 날짜별 보기 ==========
 if view_mode == "날짜별":
     if trades:
@@ -347,7 +358,7 @@ elif view_mode == "종목별":
                     </div>
                     """, unsafe_allow_html=True)
 
-                    # 해당 날짜 거래들
+                    # 해당 날짜 거래들 - 전체 목록과 동일한 레이아웃
                     for t in sorted(day_trades, key=lambda x: x.id):
                         t_type = "매수" if t.trade_type == "BUY" else "매도"
                         t_bg = "#E8F3FF" if t.trade_type == "BUY" else "#FFEFEF"
@@ -359,22 +370,42 @@ elif view_mode == "종목별":
                             p_sign = "+" if t.profit_loss > 0 else ""
                             profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{float(t.profit_loss):,.0f}원</span>'
 
-                        # 홈 스타일 카드
-                        st.markdown(f"""
-                        <div style="display: flex; justify-content: space-between; align-items: center;
-                                    padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
-                                    margin: 6px 0; border: 1px solid #F2F3F5;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <span style="background: {t_bg}; color: {t_color}; padding: 4px 8px;
-                                            border-radius: 4px; font-size: 12px; font-weight: 600;">{t_type}</span>
-                                <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="color: #191F28; font-size: 14px;">{float(t.price):,.0f}원 × {t.quantity}주</div>
-                                <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        # 카드 + 수정버튼 (전체 목록과 동일)
+                        col_card, col_edit = st.columns([0.88, 0.12])
+
+                        with col_card:
+                            check_col, card_col = st.columns([0.05, 0.95])
+                            with check_col:
+                                st.checkbox(
+                                    "선택",
+                                    key=f"check_stock_{t.id}",
+                                    value=t.id in st.session_state.delete_ids,
+                                    label_visibility="collapsed",
+                                    on_change=on_checkbox_change,
+                                    args=(t.id,)
+                                )
+                            with card_col:
+                                st.markdown(f"""
+                                <div style="display: flex; justify-content: space-between; align-items: center;
+                                            padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
+                                            margin: 6px 0; border: 1px solid #F2F3F5;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span style="background: {t_bg}; color: {t_color}; padding: 4px 8px;
+                                                    border-radius: 4px; font-size: 12px; font-weight: 600;">{t_type}</span>
+                                        <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="color: #191F28; font-size: 14px;">{float(t.price):,.0f}원 × {t.quantity}주</div>
+                                        <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
+                                    </div>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                        with col_edit:
+                            st.markdown("<div style='height: 6px'></div>", unsafe_allow_html=True)
+                            if st.button("수정", key=f"edit_stock_{t.id}", use_container_width=True):
+                                st.session_state.edit_trade_id = t.id
+                                st.rerun()
 
                 # 손익 요약
                 if total_profit != 0:
@@ -390,26 +421,12 @@ elif view_mode == "종목별":
                     </div>
                     """, unsafe_allow_html=True)
 
-                # 수정 버튼 안내
-                st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
-                st.info("💡 개별 거래를 수정하려면 '전체 목록' 보기에서 수정할 수 있어요.")
-
     else:
         st.info("조건에 맞는 매매 기록이 없습니다.")
 
 # ========== 전체 목록 ==========
 else:
     if trades:
-        # 삭제할 항목 저장
-        if 'delete_ids' not in st.session_state:
-            st.session_state.delete_ids = set()
-
-        # 체크박스 콜백 함수
-        def on_checkbox_change(trade_id):
-            if st.session_state.get(f"check_{trade_id}"):
-                st.session_state.delete_ids.add(trade_id)
-            else:
-                st.session_state.delete_ids.discard(trade_id)
 
         # 날짜별로 그룹화
         date_groups = defaultdict(list)
