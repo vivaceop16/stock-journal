@@ -185,10 +185,11 @@ class TradeService:
 
     def delete_trade(self, trade_id: int) -> bool:
         """매매 기록 삭제"""
-        trade = self.get_trade(trade_id)
+        session = self.session
+        trade = session.query(Trade).filter(Trade.id == trade_id).first()
         if trade:
-            self.session.delete(trade)
-            self.session.commit()
+            session.delete(trade)
+            session.commit()
             return True
         return False
 

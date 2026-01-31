@@ -34,6 +34,11 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# 저장 성공 메시지 표시
+if st.session_state.get('trade_saved'):
+    st.success("✅ 매매가 저장되었습니다!")
+    del st.session_state['trade_saved']
+
 # 입력 폼
 with st.form("trade_form"):
     # 기본 정보
@@ -189,7 +194,7 @@ with st.form("trade_form"):
                 }
 
                 trade = trade_service.create_trade(trade_data)
-                st.success("저장되었습니다!")
+                st.session_state['trade_saved'] = True
                 st.rerun()
 
             except Exception as e:
