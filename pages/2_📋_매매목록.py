@@ -229,16 +229,12 @@ else:
         if 'delete_ids' not in st.session_state:
             st.session_state.delete_ids = set()
 
-        # 삭제 버튼 (선택된 항목이 있을 때만)
-        col_del1, col_del2 = st.columns([3, 1])
-        with col_del2:
-            if st.session_state.delete_ids:
-                if st.button(f"🗑️ {len(st.session_state.delete_ids)}건 삭제", type="secondary", use_container_width=True):
-                    for del_id in st.session_state.delete_ids:
-                        trade_service.delete_trade(del_id)
-                    st.session_state.delete_ids = set()
-                    st.success("삭제되었습니다.")
-                    st.rerun()
+        # 체크박스 콜백 함수
+        def on_checkbox_change(trade_id):
+            if st.session_state.get(f"check_{trade_id}"):
+                st.session_state.delete_ids.add(trade_id)
+            else:
+                st.session_state.delete_ids.discard(trade_id)
 
         # 거래 목록 (체크박스 + 펼침 상세)
         for trade in trades:
@@ -259,16 +255,14 @@ else:
                 col_check, col_content = st.columns([0.08, 0.92])
 
                 with col_check:
-                    is_checked = st.checkbox(
+                    st.checkbox(
                         "선택",
                         key=f"check_{trade.id}",
                         value=trade.id in st.session_state.delete_ids,
-                        label_visibility="collapsed"
+                        label_visibility="collapsed",
+                        on_change=on_checkbox_change,
+                        args=(trade.id,)
                     )
-                    if is_checked:
-                        st.session_state.delete_ids.add(trade.id)
-                    elif trade.id in st.session_state.delete_ids:
-                        st.session_state.delete_ids.discard(trade.id)
 
                 with col_content:
                     # 펼침 가능한 상세 정보
@@ -311,6 +305,18 @@ else:
                                 <div style="color: #191F28;">{trade.trade_reason}</div>
                             </div>
                             """, unsafe_allow_html=True)
+
+        # 삭제 버튼 (선택된 항목이 있을 때만 - 리스트 하단에 표시)
+        if st.session_state.delete_ids:
+            st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
+            col_del1, col_del2, col_del3 = st.columns([1, 1, 1])
+            with col_del2:
+                if st.button(f"🗑️ {len(st.session_state.delete_ids)}건 삭제", type="primary", use_container_width=True):
+                    for del_id in list(st.session_state.delete_ids):
+                        trade_service.delete_trade(del_id)
+                    st.session_state.delete_ids = set()
+                    st.success("삭제되었습니다.")
+                    st.rerun()
 
     else:
         st.markdown("""
