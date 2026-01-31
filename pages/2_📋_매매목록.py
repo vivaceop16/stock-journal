@@ -323,7 +323,7 @@ elif view_mode == "종목별":
             avg_price = data['total_invested'] / total_buy_qty if total_buy_qty > 0 else 0
 
             # 종목 카드 + 상세 내역 통합 (expander로)
-            with st.expander(f"**{stock_name}** · {latest_date} · 매수 {len(buys)}회 / 매도 {len(sells)}회 · 평단가 {avg_price:,.0f}원", expanded=False):
+            with st.expander(f"📊 {stock_name} · {latest_date} · 매수 {len(buys)}회 / 매도 {len(sells)}회 · 평단가 {avg_price:,.0f}원", expanded=False):
                 # 거래 내역 - 날짜별 그룹화
                 all_stock_trades = buys + sells
                 date_grouped = defaultdict(list)
@@ -464,11 +464,10 @@ else:
 
                     with col_content:
                         # 펼침 가능한 상세 정보
+                        type_emoji = "🔵" if trade.trade_type == 'BUY' else "🔴"
                         with st.expander(
-                            f"**{trade.stock_name}** · "
-                            f":{'blue' if trade.trade_type == 'BUY' else 'red'}[{trade_type_str}] · "
-                            f"{float(trade.price):,.0f}원 × {trade.quantity}주 · "
-                            f":{('red' if trade.profit_rate and trade.profit_rate > 0 else 'blue') if trade.profit_rate else 'gray'}[{t_profit_str}]"
+                            f"{trade.stock_name} · {type_emoji} {trade_type_str} · "
+                            f"{float(trade.price):,.0f}원 × {trade.quantity}주 · {t_profit_str}"
                         ):
                             col1, col2 = st.columns(2)
                             with col1:
