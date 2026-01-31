@@ -332,6 +332,21 @@ TOSS_CSS = """
     [data-testid="stSidebar"] {
         background: #FFFFFF;
         border-right: 1px solid #E5E8EB;
+        transition: none !important;
+    }
+
+    /* 사이드바 축소/확대 애니메이션 제거 */
+    [data-testid="stSidebar"] > div {
+        transition: none !important;
+    }
+
+    [data-testid="stSidebar"][aria-expanded] {
+        transition: none !important;
+    }
+
+    /* 사이드바 토글 버튼 숨기기 */
+    [data-testid="collapsedControl"] {
+        display: none !important;
     }
 
     [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
@@ -350,11 +365,12 @@ TOSS_CSS = """
 
     [data-testid="stSidebarNav"] li {
         margin: 2px 0 !important;
+        transition: none !important;
     }
 
     [data-testid="stSidebarNav"] li div {
         border-radius: 10px !important;
-        transition: all 0.2s ease !important;
+        transition: none !important;
     }
 
     /* 일반 상태 (선택 안됨) */

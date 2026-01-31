@@ -1,0 +1,24 @@
+[[pages]]
+path = "app.py"
+name = "🏠 Home"
+icon = "🏠"
+
+[[pages]]
+path = "pages/1_📝_매매입력.py"
+name = "📝 매매입력"
+
+[[pages]]
+path = "pages/2_📋_매매목록.py"
+name = "📋 매매목록"
+
+[[pages]]
+path = "pages/3_🤖_AI분석.py"
+name = "🤖 AI분석"
+
+[[pages]]
+path = "pages/4_📚_학습가이드.py"
+name = "📚 학습가이드"
+
+[[pages]]
+path = "pages/5_📈_월간리포트.py"
+name = "📈 월간리포트"

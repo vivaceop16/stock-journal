@@ -16,79 +16,100 @@ class ReportService:
 
     def __init__(self, session: Optional[Session] = None):
         self._session = session
+        self._managed_session = None
+
+    def _get_session(self) -> Session:
+        """세션 반환 (관리되는 세션 우선)"""
+        if self._session is not None:
+            return self._session
+        if self._managed_session is not None:
+            return self._managed_session
+        self._managed_session = db_manager.get_session()
+        return self._managed_session
+
+    def _close_managed_session(self):
+        """관리되는 세션 닫기"""
+        if self._managed_session is not None:
+            self._managed_session.close()
+            self._managed_session = None
 
     @property
     def session(self) -> Session:
-        if self._session is None:
-            return db_manager.get_session()
-        return self._session
+        return self._get_session()
 
-    def generate_monthly_report(self, year: int, month: int) -> MonthlyReport:
-        """월간 리포트 생성"""
-        # 기간 설정
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_date = date(year + 1, 1, 1)
-        else:
-            end_date = date(year, month + 1, 1)
+    def generate_monthly_report(self, year: int, month: int) -> Dict[str, Any]:
+        """월간 리포트 생성 - 딕셔너리로 반환"""
+        try:
+            session = self._get_session()
 
-        # 해당 월의 완료된 매도 거래 조회
-        completed_sells = self.session.query(Trade).filter(
-            and_(
-                Trade.trade_type == 'SELL',
-                Trade.linked_trade_id.isnot(None),
-                Trade.trade_date >= start_date,
-                Trade.trade_date < end_date
-            )
-        ).all()
+            # 기간 설정
+            start_date = date(year, month, 1)
+            if month == 12:
+                end_date = date(year + 1, 1, 1)
+            else:
+                end_date = date(year, month + 1, 1)
 
-        # 통계 계산
-        stats = self._calculate_statistics(completed_sells)
+            # 해당 월의 완료된 매도 거래 조회
+            completed_sells = session.query(Trade).filter(
+                and_(
+                    Trade.trade_type == 'SELL',
+                    Trade.linked_trade_id.isnot(None),
+                    Trade.trade_date >= start_date,
+                    Trade.trade_date < end_date
+                )
+            ).all()
 
-        # 패턴 분석
-        pattern_analysis = self._analyze_patterns(completed_sells)
+            # 통계 계산
+            stats = self._calculate_statistics(completed_sells, session)
 
-        # 키워드 요약
-        keyword_summary = self._summarize_keywords(completed_sells)
+            # 패턴 분석
+            pattern_analysis = self._analyze_patterns(completed_sells, session)
 
-        # 개선 제안 생성
-        improvement_suggestions = self._generate_suggestions(stats, pattern_analysis)
+            # 키워드 요약
+            keyword_summary = self._summarize_keywords(completed_sells, session)
 
-        # 기존 리포트 확인 (있으면 업데이트)
-        report_month = date(year, month, 1)
-        existing_report = self.session.query(MonthlyReport).filter(
-            MonthlyReport.report_month == report_month
-        ).first()
+            # 개선 제안 생성
+            improvement_suggestions = self._generate_suggestions(stats, pattern_analysis)
 
-        if existing_report:
-            report = existing_report
-        else:
-            report = MonthlyReport(report_month=report_month)
-            self.session.add(report)
+            # 기존 리포트 확인 (있으면 업데이트)
+            report_month = date(year, month, 1)
+            existing_report = session.query(MonthlyReport).filter(
+                MonthlyReport.report_month == report_month
+            ).first()
 
-        # 리포트 데이터 설정
-        report.total_trades = stats['total_trades']
-        report.winning_trades = stats['winning_trades']
-        report.losing_trades = stats['losing_trades']
-        report.win_rate = stats['win_rate']
-        report.total_profit_loss = stats['total_profit_loss']
-        report.average_profit = stats['average_profit']
-        report.average_loss = stats['average_loss']
-        report.profit_loss_ratio = stats['profit_loss_ratio']
-        report.max_profit = stats['max_profit']
-        report.max_loss = stats['max_loss']
-        report.best_trade_pattern = pattern_analysis.get('best_pattern')
-        report.worst_trade_pattern = pattern_analysis.get('worst_pattern')
-        report.average_score = stats['average_score']
-        report.pattern_analysis = pattern_analysis
-        report.keyword_summary = keyword_summary
-        report.improvement_suggestions = improvement_suggestions
+            if existing_report:
+                report = existing_report
+            else:
+                report = MonthlyReport(report_month=report_month)
+                session.add(report)
 
-        self.session.commit()
-        self.session.refresh(report)
-        return report
+            # 리포트 데이터 설정
+            report.total_trades = stats['total_trades']
+            report.winning_trades = stats['winning_trades']
+            report.losing_trades = stats['losing_trades']
+            report.win_rate = stats['win_rate']
+            report.total_profit_loss = stats['total_profit_loss']
+            report.average_profit = stats['average_profit']
+            report.average_loss = stats['average_loss']
+            report.profit_loss_ratio = stats['profit_loss_ratio']
+            report.max_profit = stats['max_profit']
+            report.max_loss = stats['max_loss']
+            report.best_trade_pattern = pattern_analysis.get('best_pattern')
+            report.worst_trade_pattern = pattern_analysis.get('worst_pattern')
+            report.average_score = stats['average_score']
+            report.pattern_analysis = pattern_analysis
+            report.keyword_summary = keyword_summary
+            report.improvement_suggestions = improvement_suggestions
 
-    def _calculate_statistics(self, trades: List[Trade]) -> Dict[str, Any]:
+            session.commit()
+
+            # 리포트 ID 반환 (객체 대신)
+            return {'id': report.id, 'report_month': report_month}
+
+        finally:
+            self._close_managed_session()
+
+    def _calculate_statistics(self, trades: List[Trade], session: Session) -> Dict[str, Any]:
         """매매 통계 계산"""
         if not trades:
             return {
@@ -128,9 +149,9 @@ class ReportService:
 
         # 평균 AI 점수
         trade_ids = [t.id for t in trades]
-        analyses = self.session.query(AnalysisResult).filter(
+        analyses = session.query(AnalysisResult).filter(
             AnalysisResult.trade_id.in_(trade_ids)
-        ).all()
+        ).all() if trade_ids else []
         scores = [a.total_score for a in analyses if a.total_score]
         average_score = sum(scores) / len(scores) if scores else Decimal('0')
 
@@ -148,15 +169,15 @@ class ReportService:
             'average_score': Decimal(str(average_score))
         }
 
-    def _analyze_patterns(self, trades: List[Trade]) -> Dict[str, Any]:
+    def _analyze_patterns(self, trades: List[Trade], session: Session) -> Dict[str, Any]:
         """패턴별 성과 분석"""
         if not trades:
             return {}
 
         trade_ids = [t.id for t in trades]
-        analyses = self.session.query(AnalysisResult).filter(
+        analyses = session.query(AnalysisResult).filter(
             AnalysisResult.trade_id.in_(trade_ids)
-        ).all()
+        ).all() if trade_ids else []
 
         # 패턴별 데이터 집계
         pattern_data = defaultdict(lambda: {'trades': [], 'profits': []})
@@ -190,12 +211,12 @@ class ReportService:
             'worst_pattern': worst_pattern
         }
 
-    def _summarize_keywords(self, trades: List[Trade]) -> Dict[str, Any]:
+    def _summarize_keywords(self, trades: List[Trade], session: Session) -> Dict[str, Any]:
         """키워드 요약"""
         trade_ids = [t.id for t in trades]
-        analyses = self.session.query(AnalysisResult).filter(
+        analyses = session.query(AnalysisResult).filter(
             AnalysisResult.trade_id.in_(trade_ids)
-        ).all()
+        ).all() if trade_ids else []
 
         # 전체 키워드 집계
         all_keywords = Counter()
@@ -262,16 +283,34 @@ class ReportService:
 
     def get_report(self, year: int, month: int) -> Optional[MonthlyReport]:
         """특정 월 리포트 조회"""
-        report_month = date(year, month, 1)
-        return self.session.query(MonthlyReport).filter(
-            MonthlyReport.report_month == report_month
-        ).first()
+        try:
+            session = self._get_session()
+            report_month = date(year, month, 1)
+            report = session.query(MonthlyReport).filter(
+                MonthlyReport.report_month == report_month
+            ).first()
+            if report:
+                # 세션에서 분리하기 전에 모든 속성을 로드
+                session.refresh(report)
+                # Detach from session but keep data
+                session.expunge(report)
+            return report
+        finally:
+            self._close_managed_session()
 
     def get_recent_reports(self, limit: int = 6) -> List[MonthlyReport]:
         """최근 리포트 조회"""
-        return self.session.query(MonthlyReport).order_by(
-            MonthlyReport.report_month.desc()
-        ).limit(limit).all()
+        try:
+            session = self._get_session()
+            reports = session.query(MonthlyReport).order_by(
+                MonthlyReport.report_month.desc()
+            ).limit(limit).all()
+            # Detach all reports from session
+            for report in reports:
+                session.expunge(report)
+            return reports
+        finally:
+            self._close_managed_session()
 
     def get_dashboard_data(self, report: MonthlyReport) -> Dict[str, Any]:
         """대시보드용 데이터 생성"""

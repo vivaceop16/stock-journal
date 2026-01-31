@@ -6,7 +6,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import date, datetime
+from datetime import date
 import pandas as pd
 
 from database import init_db
@@ -61,8 +61,9 @@ with col3:
     if st.button("📊 리포트 생성", type="primary", use_container_width=True):
         with st.spinner("리포트 생성 중..."):
             try:
-                report = report_service.generate_monthly_report(selected_year, selected_month)
+                result = report_service.generate_monthly_report(selected_year, selected_month)
                 st.success("리포트가 생성되었습니다!")
+                st.rerun()
             except Exception as e:
                 st.error(f"리포트 생성 중 오류: {e}")
 
