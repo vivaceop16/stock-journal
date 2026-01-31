@@ -23,6 +23,84 @@ init_db()
 # 서비스 초기화
 trade_service = TradeService()
 
+# 수정 완료 메시지
+if st.session_state.get('trade_updated'):
+    st.success("✅ 매매가 수정되었습니다!")
+    del st.session_state['trade_updated']
+
+# 수정 모달 (다이얼로그)
+@st.dialog("매매 수정")
+def edit_trade_dialog(trade_id):
+    trade = trade_service.get_trade(trade_id)
+    if not trade:
+        st.error("거래를 찾을 수 없습니다.")
+        return
+
+    with st.form("edit_form"):
+        st.markdown(f"**{trade.stock_name}** 수정", unsafe_allow_html=True)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            new_stock_name = st.text_input("종목명", value=trade.stock_name)
+        with col2:
+            new_trade_date = st.date_input("거래일", value=trade.trade_date)
+
+        new_trade_type = st.radio(
+            "거래유형",
+            options=["BUY", "SELL"],
+            format_func=lambda x: "🔵 매수" if x == "BUY" else "🔴 매도",
+            horizontal=True,
+            index=0 if trade.trade_type == "BUY" else 1
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            new_price = st.number_input("거래가격 (원)", value=int(trade.price), min_value=0, step=100)
+        with col2:
+            new_quantity = st.number_input("수량 (주)", value=trade.quantity, min_value=1, step=1)
+
+        new_trade_reason = st.text_area("매매 근거", value=trade.trade_reason or "", height=100)
+
+        # 확신도 (1-5를 score로 변환: 2,4,5,7,9)
+        score_to_level = {2: 1, 4: 2, 5: 3, 7: 4, 9: 5}
+        current_level = score_to_level.get(trade.confidence_score, 3)
+        new_confidence = st.radio(
+            "확신도",
+            options=[1, 2, 3, 4, 5],
+            format_func=lambda x: ["⚪ 매우 낮음", "🔵 낮음", "🟢 보통", "🟡 높음", "🔴 매우 높음"][x-1],
+            horizontal=True,
+            index=current_level - 1
+        )
+
+        col1, col2 = st.columns(2)
+        with col1:
+            cancel = st.form_submit_button("취소", use_container_width=True)
+        with col2:
+            submit = st.form_submit_button("저장", type="primary", use_container_width=True)
+
+        if submit:
+            score_mapping = {1: 2, 2: 4, 3: 5, 4: 7, 5: 9}
+            update_data = {
+                'stock_name': new_stock_name,
+                'trade_date': new_trade_date,
+                'trade_type': new_trade_type,
+                'price': new_price,
+                'quantity': new_quantity,
+                'trade_reason': new_trade_reason,
+                'confidence_score': score_mapping[new_confidence]
+            }
+            trade_service.update_trade(trade_id, update_data)
+            st.session_state['trade_updated'] = True
+            st.rerun()
+
+        if cancel:
+            st.rerun()
+
+# 수정 버튼 클릭 처리
+if 'edit_trade_id' in st.session_state and st.session_state.edit_trade_id:
+    edit_trade_dialog(st.session_state.edit_trade_id)
+    st.session_state.edit_trade_id = None
+
 # 헤더
 st.markdown("""
 <div style="padding: 20px 0 16px 0;">
@@ -305,6 +383,12 @@ else:
                                 <div style="color: #191F28;">{trade.trade_reason}</div>
                             </div>
                             """, unsafe_allow_html=True)
+
+                        # 수정 버튼
+                        st.markdown("<div style='height: 12px'></div>", unsafe_allow_html=True)
+                        if st.button("✏️ 수정", key=f"edit_{trade.id}", use_container_width=True):
+                            st.session_state.edit_trade_id = trade.id
+                            st.rerun()
 
         # 삭제 버튼 (선택된 항목이 있을 때만 - 리스트 하단에 표시)
         if st.session_state.delete_ids:

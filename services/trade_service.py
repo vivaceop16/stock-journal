@@ -195,7 +195,8 @@ class TradeService:
 
     def update_trade(self, trade_id: int, update_data: Dict[str, Any]) -> Optional[Trade]:
         """매매 기록 수정"""
-        trade = self.get_trade(trade_id)
+        session = self.session
+        trade = session.query(Trade).filter(Trade.id == trade_id).first()
         if not trade:
             return None
 
@@ -209,9 +210,14 @@ class TradeService:
 
         # 매도 거래인 경우 수익 재계산
         if trade.trade_type == 'SELL' and trade.linked_trade_id:
-            profit_info = self._calculate_profit(trade)
-            trade.profit_loss = profit_info['profit_loss']
-            trade.profit_rate = profit_info['profit_rate']
+            # 연결된 매수 거래 조회 (같은 세션에서)
+            buy_trade = session.query(Trade).filter(Trade.id == trade.linked_trade_id).first()
+            if buy_trade and buy_trade.price > 0:
+                sell_quantity = trade.quantity
+                profit_loss = (trade.price - buy_trade.price) * sell_quantity
+                profit_rate = ((trade.price - buy_trade.price) / buy_trade.price) * 100
+                trade.profit_loss = profit_loss
+                trade.profit_rate = profit_rate
 
-        self.session.commit()
+        session.commit()
         return trade
