@@ -304,14 +304,14 @@ TOSS_CSS = """
         box-shadow: 0 4px 12px rgba(49, 130, 246, 0.3);
     }
 
-    /* 입력 필드 - 테두리 없음 */
+    /* 입력 필드 - 테두리 없음, 흰색 배경 */
     .stTextInput > div > div > input,
     .stNumberInput > div > div > input,
     .stTextArea > div > div > textarea {
         border-radius: 12px;
         border: none !important;
         padding: 12px 16px;
-        background: #F7F8FA !important;
+        background: #FFFFFF !important;
     }
 
     .stTextInput > div > div > input:focus,
@@ -319,34 +319,34 @@ TOSS_CSS = """
     .stTextArea > div > div > textarea:focus {
         border: none !important;
         box-shadow: none !important;
-        background: #F2F4F6 !important;
+        background: #FFFFFF !important;
     }
 
-    /* 셀렉트박스 - 테두리 없음 */
+    /* 셀렉트박스 - 테두리 없음, 흰색 배경 */
     .stSelectbox > div > div,
     [data-baseweb="select"] > div {
         border: none !important;
-        background: #F7F8FA !important;
+        background: #FFFFFF !important;
         border-radius: 12px !important;
     }
 
     [data-baseweb="select"] > div:focus-within {
         border: none !important;
         box-shadow: none !important;
-        background: #F2F4F6 !important;
+        background: #FFFFFF !important;
     }
 
-    /* 날짜 입력 - 테두리 없음 */
+    /* 날짜 입력 - 테두리 없음, 흰색 배경 */
     .stDateInput > div > div > input {
         border: none !important;
-        background: #F7F8FA !important;
+        background: #FFFFFF !important;
         border-radius: 12px !important;
         padding: 12px 16px;
     }
 
     .stDateInput > div > div {
         border: none !important;
-        background: #F7F8FA !important;
+        background: #FFFFFF !important;
         border-radius: 12px !important;
     }
 
