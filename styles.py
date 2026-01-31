@@ -367,16 +367,6 @@ TOSS_CSS = """
     [data-testid="stSidebar"] {
         background: #FFFFFF;
         border-right: 1px solid #E5E8EB;
-        transition: none !important;
-    }
-
-    /* 사이드바 축소/확대 애니메이션 제거 */
-    [data-testid="stSidebar"] > div {
-        transition: none !important;
-    }
-
-    [data-testid="stSidebar"][aria-expanded] {
-        transition: none !important;
     }
 
     /* 사이드바 토글 버튼 숨기기 */
@@ -388,36 +378,47 @@ TOSS_CSS = """
         font-size: 14px;
     }
 
+    /* ===== LNB 애니메이션 완전 제거 ===== */
+    /* 모든 사이드바 내부 요소에서 transition 제거 */
+    [data-testid="stSidebar"] *,
+    [data-testid="stSidebarNav"] *,
+    [data-testid="stSidebarNav"] *::before,
+    [data-testid="stSidebarNav"] *::after {
+        transition: none !important;
+        animation: none !important;
+        -webkit-transition: none !important;
+        -moz-transition: none !important;
+        -o-transition: none !important;
+    }
+
     /* Streamlit 사이드바 네비게이션 - 전체 스타일 */
     [data-testid="stSidebarNav"] {
         padding: 0 !important;
         background: transparent !important;
-        transition: none !important;
     }
 
     [data-testid="stSidebarNav"] ul {
         padding: 0 8px !important;
-        transition: none !important;
     }
 
+    /* 모든 li 항목 고정 높이 */
     [data-testid="stSidebarNav"] li {
         margin: 2px 0 !important;
-        transition: none !important;
-        min-height: 44px !important;
         height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        overflow: hidden !important;
     }
 
+    /* li 내부의 모든 div 고정 높이 */
+    [data-testid="stSidebarNav"] li > div,
+    [data-testid="stSidebarNav"] li > div > div,
     [data-testid="stSidebarNav"] li div {
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        overflow: hidden !important;
         border-radius: 10px !important;
-        transition: none !important;
-        min-height: 44px !important;
-        height: 44px !important;
-    }
-
-    [data-testid="stSidebarNav"] li div div {
-        transition: none !important;
-        min-height: 44px !important;
-        height: 44px !important;
     }
 
     /* 일반 상태 (선택 안됨) */
@@ -427,7 +428,6 @@ TOSS_CSS = """
         color: #6B7684 !important;
         font-weight: 500 !important;
         font-size: 14px !important;
-        transition: none !important;
         text-decoration: none !important;
         background: transparent !important;
         height: 44px !important;
@@ -436,12 +436,12 @@ TOSS_CSS = """
         display: flex !important;
         align-items: center !important;
         box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
     [data-testid="stSidebarNav"] li a:hover {
         background: #F2F4F6 !important;
         color: #191F28 !important;
-        height: 44px !important;
     }
 
     /* 선택된 상태 - 파란색 강조 */
@@ -452,18 +452,20 @@ TOSS_CSS = """
         color: #3182F6 !important;
         font-weight: 600 !important;
         border-left: 3px solid #3182F6 !important;
-        height: 44px !important;
-        min-height: 44px !important;
-        max-height: 44px !important;
     }
 
-    /* 메인 컨텐츠 상단 여백 줄이기 - Home과 라인 맞춤 */
+    /* 메인 컨텐츠 상단 여백 - Home 텍스트와 라인 맞춤 */
     .main .block-container {
-        padding-top: 2rem !important;
+        padding-top: 1rem !important;
     }
 
     [data-testid="stAppViewBlockContainer"] {
-        padding-top: 2rem !important;
+        padding-top: 1rem !important;
+    }
+
+    /* 메인 헤더 영역 위치 조정 */
+    .main .block-container > div:first-child {
+        margin-top: 0 !important;
     }
 
     /* 아이콘 스타일 - 파일명에 이모지 포함 */
