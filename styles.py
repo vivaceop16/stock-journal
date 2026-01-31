@@ -304,20 +304,55 @@ TOSS_CSS = """
         box-shadow: 0 4px 12px rgba(49, 130, 246, 0.3);
     }
 
-    /* 입력 필드 */
+    /* 입력 필드 - 테두리 없음 */
     .stTextInput > div > div > input,
     .stNumberInput > div > div > input,
     .stTextArea > div > div > textarea {
         border-radius: 12px;
-        border: 1px solid #E5E8EB;
+        border: none !important;
         padding: 12px 16px;
+        background: #F7F8FA !important;
     }
 
     .stTextInput > div > div > input:focus,
     .stNumberInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
-        border-color: #3182F6;
-        box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.1);
+        border: none !important;
+        box-shadow: none !important;
+        background: #F2F4F6 !important;
+    }
+
+    /* 셀렉트박스 - 테두리 없음 */
+    .stSelectbox > div > div,
+    [data-baseweb="select"] > div {
+        border: none !important;
+        background: #F7F8FA !important;
+        border-radius: 12px !important;
+    }
+
+    [data-baseweb="select"] > div:focus-within {
+        border: none !important;
+        box-shadow: none !important;
+        background: #F2F4F6 !important;
+    }
+
+    /* 날짜 입력 - 테두리 없음 */
+    .stDateInput > div > div > input {
+        border: none !important;
+        background: #F7F8FA !important;
+        border-radius: 12px !important;
+        padding: 12px 16px;
+    }
+
+    .stDateInput > div > div {
+        border: none !important;
+        background: #F7F8FA !important;
+        border-radius: 12px !important;
+    }
+
+    /* 라디오 버튼 컨테이너 */
+    .stRadio > div {
+        background: transparent !important;
     }
 
     /* 메트릭 카드 */
