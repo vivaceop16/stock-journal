@@ -44,9 +44,6 @@ if api_key:
 else:
     st.info("💡 규칙 기반 분석을 제공합니다. (OpenAI API 없이도 사용 가능)")
 
-# 분석할 매매 선택
-st.subheader("📋 분석할 매매 선택")
-
 # 최근 매매 목록
 recent_trades = trade_service.list_trades(limit=20)
 
@@ -54,64 +51,121 @@ if not recent_trades:
     st.info("분석할 매매 기록이 없습니다. 먼저 '매매 입력'에서 매매를 기록해주세요.")
     st.stop()
 
-# 매매 선택
-trade_options = {
-    f"#{t.id} | {t.trade_date} | {t.stock_name} | {'매수' if t.trade_type == 'BUY' else '매도'} | {t.price:,.0f}원": t.id
-    for t in recent_trades
-}
+# 분석할 매매가 선택되었는지 확인
+selected_trade_id = st.session_state.get('analyze_trade_id')
+selected_trade = None
+existing_analysis = None
 
-selected_option = st.selectbox(
-    "분석할 매매를 선택하세요",
-    options=list(trade_options.keys())
-)
+if selected_trade_id:
+    selected_trade = trade_service.get_trade(selected_trade_id)
+    if selected_trade:
+        existing_analysis = ai_analyzer.get_analysis_for_trade(selected_trade_id)
 
-selected_trade_id = trade_options[selected_option]
-selected_trade = trade_service.get_trade(selected_trade_id)
-
-# 선택된 매매 정보 표시
-st.markdown("---")
-st.subheader("📈 선택된 매매 정보")
-
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("종목", selected_trade.stock_name)
-with col2:
-    st.metric("유형", "매수" if selected_trade.trade_type == "BUY" else "매도")
-with col3:
-    st.metric("가격", f"{selected_trade.price:,.0f}원")
-with col4:
-    if selected_trade.profit_rate is not None:
-        st.metric("수익률", f"{selected_trade.profit_rate:.2f}%")
-    else:
-        st.metric("확신도", f"{selected_trade.confidence_score}/10")
-
-with st.expander("매매 근거 보기"):
-    st.write(selected_trade.trade_reason)
-
-# 분석 실행 버튼
-st.markdown("---")
-
-# 기존 분석 결과 확인
-existing_analysis = ai_analyzer.get_analysis_for_trade(selected_trade_id)
-
-col1, col2 = st.columns([1, 1])
-with col1:
-    analyze_button = st.button(
-        "🔄 다시 분석하기" if existing_analysis else "🔍 분석 시작",
-        type="primary",
-        use_container_width=True
-    )
-
-if analyze_button:
+# 분석 실행 처리
+if st.session_state.get('run_analysis') and selected_trade:
     with st.spinner("분석 중..."):
         try:
             analysis = ai_analyzer.analyze_trade(selected_trade)
             st.success("분석이 완료되었습니다!")
             existing_analysis = analysis
+            st.session_state['run_analysis'] = False
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {e}")
             import traceback
             st.code(traceback.format_exc())
+            st.session_state['run_analysis'] = False
+
+# 매매 목록 게시판 형태
+st.markdown("""
+<div style="background: #FFFFFF; border-radius: 12px; overflow: hidden; border: 1px solid #E5E8EB; margin-bottom: 24px;">
+""", unsafe_allow_html=True)
+
+# 헤더
+col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([0.9, 1.5, 0.7, 1, 1, 0.7])
+with col_h1:
+    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">날짜</div>', unsafe_allow_html=True)
+with col_h2:
+    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">종목</div>', unsafe_allow_html=True)
+with col_h3:
+    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">유형</div>', unsafe_allow_html=True)
+with col_h4:
+    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">가격</div>', unsafe_allow_html=True)
+with col_h5:
+    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0;">손익</div>', unsafe_allow_html=True)
+with col_h6:
+    st.markdown('<div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 8px 0; text-align: center;">분석</div>', unsafe_allow_html=True)
+
+st.markdown('<div style="border-bottom: 1px solid #E5E8EB;"></div>', unsafe_allow_html=True)
+
+for trade in recent_trades:
+    trade_type_str = "매수" if trade.trade_type == "BUY" else "매도"
+    trade_color = "#3182F6" if trade.trade_type == "BUY" else "#F04452"
+    trade_bg = "#E8F3FF" if trade.trade_type == "BUY" else "#FFEFEF"
+
+    # 손익 표시
+    if trade.profit_rate is not None:
+        profit_color = "#F04452" if trade.profit_rate > 0 else "#3182F6"
+        profit_str = f"{'+' if trade.profit_rate > 0 else ''}{float(trade.profit_loss):,.0f}원"
+    else:
+        profit_color = "#8B95A1"
+        profit_str = "-"
+
+    # 기존 분석 여부 확인
+    has_analysis = ai_analyzer.get_analysis_for_trade(trade.id) is not None
+
+    # 선택된 행 하이라이트
+    row_bg = "#F0F6FF" if selected_trade_id == trade.id else "#FFFFFF"
+
+    # 각 행을 컨테이너로
+    with st.container():
+        col1, col2, col3, col4, col5, col6 = st.columns([0.9, 1.5, 0.7, 1, 1, 0.7])
+
+        with col1:
+            st.markdown(f'<div style="color: #6B7684; font-size: 14px; padding: 8px 0;">{trade.trade_date}</div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown(f'<div style="font-weight: 600; color: #191F28; padding: 8px 0;">{trade.stock_name}</div>', unsafe_allow_html=True)
+        with col3:
+            st.markdown(f'<div style="padding: 8px 0;"><span style="background: {trade_bg}; color: {trade_color}; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">{trade_type_str}</span></div>', unsafe_allow_html=True)
+        with col4:
+            st.markdown(f'<div style="color: #191F28; padding: 8px 0;">{float(trade.price):,.0f}원</div>', unsafe_allow_html=True)
+        with col5:
+            st.markdown(f'<div style="color: {profit_color}; font-weight: 600; padding: 8px 0;">{profit_str}</div>', unsafe_allow_html=True)
+        with col6:
+            btn_label = "🔄 재분석" if has_analysis else "🔍 분석"
+            if st.button(btn_label, key=f"analyze_{trade.id}", use_container_width=True):
+                st.session_state['analyze_trade_id'] = trade.id
+                st.session_state['run_analysis'] = True
+                st.rerun()
+
+    st.markdown('<div style="border-bottom: 1px solid #F2F3F5;"></div>', unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# 선택된 매매 정보 표시
+if selected_trade:
+    st.markdown("---")
+    st.subheader(f"📈 {selected_trade.stock_name} 분석")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("거래일", str(selected_trade.trade_date))
+    with col2:
+        st.metric("유형", "매수" if selected_trade.trade_type == "BUY" else "매도")
+    with col3:
+        st.metric("가격", f"{selected_trade.price:,.0f}원 × {selected_trade.quantity}주")
+    with col4:
+        if selected_trade.profit_rate is not None:
+            st.metric("수익률", f"{selected_trade.profit_rate:+.2f}%")
+        else:
+            st.metric("확신도", f"{selected_trade.confidence_score}/10")
+
+    if selected_trade.trade_reason:
+        st.markdown(f"""
+        <div style="background: #F7F8FA; border-radius: 8px; padding: 12px 16px; margin: 12px 0;">
+            <div style="color: #8B95A1; font-size: 12px; margin-bottom: 4px;">매매 근거</div>
+            <div style="color: #191F28; font-size: 14px; line-height: 1.6;">{selected_trade.trade_reason}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # 분석 결과 표시
 if existing_analysis:
@@ -269,8 +323,10 @@ if existing_analysis:
         st.markdown("#### 🌍 시장 상황 분석")
         st.write(existing_analysis.market_context)
 
+elif selected_trade:
+    st.info("👆 위 목록에서 🔍 버튼을 클릭하여 분석을 시작하세요.")
 else:
-    st.info("👆 '분석 시작' 버튼을 클릭하여 분석을 시작하세요.")
+    st.info("👆 위 목록에서 분석할 매매의 🔍 버튼을 클릭하세요.")
 
 # 전체 분석 통계
 st.markdown("---")

@@ -17,6 +17,18 @@ __all__ = [
 # 토스 스타일 CSS
 TOSS_CSS = """
 <style>
+    /* Pretendard 폰트 */
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+    /* 전체 폰트 적용 */
+    html, body, [class*="css"] {
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif !important;
+    }
+
+    .stApp, .stApp * {
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif !important;
+    }
+
     /* 전체 배경 */
     .stApp {
         background-color: #F7F8FA;
