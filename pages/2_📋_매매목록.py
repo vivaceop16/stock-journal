@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from database import init_db
 from services import TradeService
-from styles import apply_toss_style, data_table_row
+from styles import apply_toss_style
 
 # 페이지 설정
 st.set_page_config(page_title="매매 목록", page_icon="📋", layout="wide")
@@ -222,41 +222,48 @@ if view_mode == "날짜별":
 
         for trade_date, day_trades in sorted(date_groups.items(), reverse=True):
             day_profit = sum(float(t.profit_loss or 0) for t in day_trades if t.profit_loss)
-            profit_str = f"+{day_profit:,.0f}원" if day_profit > 0 else f"{day_profit:,.0f}원" if day_profit < 0 else ""
-            profit_color = "#F04452" if day_profit > 0 else "#3182F6" if day_profit < 0 else ""
+            profit_str = ""
+            if day_profit != 0:
+                profit_color = "#F04452" if day_profit > 0 else "#3182F6"
+                profit_sign = "+" if day_profit > 0 else ""
+                profit_str = f'<span style="color: {profit_color}; font-weight: 600;">{profit_sign}{day_profit:,.0f}원</span>'
 
             st.markdown(f"""
             <div style="display: flex; justify-content: space-between; align-items: center;
-                        padding: 12px 0; border-bottom: 1px solid #F2F3F5; margin-top: 8px;">
-                <span style="font-weight: 600; color: #191F28;">{trade_date}</span>
-                <span style="font-size: 14px; color: {profit_color}; font-weight: 600;">{profit_str}</span>
+                        padding: 10px 0; margin-top: 8px;">
+                <span style="font-weight: 600; color: #191F28; font-size: 14px;">{trade_date}</span>
+                {profit_str}
             </div>
             """, unsafe_allow_html=True)
 
-            st.markdown('<div class="data-table" style="margin-bottom: 16px;">', unsafe_allow_html=True)
-
             for trade in day_trades:
-                trade_type = "buy" if trade.trade_type == "BUY" else "sell"
+                trade_type_str = "매수" if trade.trade_type == "BUY" else "매도"
+                trade_color = "#3182F6" if trade.trade_type == "BUY" else "#F04452"
+                trade_bg = "#E8F3FF" if trade.trade_type == "BUY" else "#FFEFEF"
+
+                profit_info = ""
                 if trade.profit_rate is not None:
                     rate = float(trade.profit_rate)
-                    profit_loss = float(trade.profit_loss or 0)
-                    profit_str = f"{'+' if rate > 0 else ''}{profit_loss:,.0f}원"
-                    profit_type = "positive" if rate > 0 else "negative"
-                else:
-                    profit_str = "-"
-                    profit_type = "neutral"
+                    p_color = "#F04452" if rate > 0 else "#3182F6"
+                    p_sign = "+" if rate > 0 else ""
+                    profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{float(trade.profit_loss):,.0f}원</span>'
 
-                data_table_row(
-                    stock_name=trade.stock_name,
-                    trade_date="",
-                    price=f"{float(trade.price):,.0f}원",
-                    quantity=f"{trade.quantity}주",
-                    profit=profit_str,
-                    trade_type=trade_type,
-                    profit_type=profit_type
-                )
+                st.markdown(f"""
+                <div style="display: flex; justify-content: space-between; align-items: center;
+                            padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
+                            margin: 6px 0; border: 1px solid #F2F3F5;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="background: {trade_bg}; color: {trade_color}; padding: 4px 8px;
+                                    border-radius: 4px; font-size: 12px; font-weight: 600;">{trade_type_str}</span>
+                        <span style="font-weight: 600; color: #191F28;">{trade.stock_name}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: #191F28; font-size: 14px;">{float(trade.price):,.0f}원 × {trade.quantity}주</div>
+                        <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
-            st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("조건에 맞는 매매 기록이 없습니다.")
 
