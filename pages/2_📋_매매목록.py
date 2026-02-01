@@ -447,31 +447,6 @@ elif view_mode == "종목별":
 # ========== 전체 목록 ==========
 else:
     if trades:
-        # 전체 목록 카드 스타일
-        st.markdown("""
-        <style>
-        /* 전체 목록 카드 스타일 */
-        .trade-card {
-            background: #FFFFFF;
-            border: 1px solid #F2F3F5;
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin: 6px 0;
-        }
-        /* 종목명 버튼 스타일 */
-        .trade-card button {
-            background: transparent !important;
-            border: none !important;
-            color: #191F28 !important;
-            font-weight: 600 !important;
-            text-align: left !important;
-            padding: 4px 0 !important;
-        }
-        .trade-card button:hover {
-            color: #3182F6 !important;
-        }
-        </style>
-        """, unsafe_allow_html=True)
 
         # 날짜별로 그룹화
         date_groups = defaultdict(list)
@@ -510,26 +485,34 @@ else:
                     p_sign = "+" if rate > 0 else ""
                     profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{float(trade.profit_loss):,.0f}원</span>'
 
-                # 카드 행 (체크박스 | 뱃지 | 종목명버튼 | 가격정보)
-                st.markdown('<div class="trade-card">', unsafe_allow_html=True)
-                c1, c2, c3, c4 = st.columns([0.06, 0.1, 0.44, 0.4])
+                # 체크박스 | 카드 | 수정버튼
+                col_check, col_card, col_edit = st.columns([0.05, 0.85, 0.1])
 
-                with c1:
+                with col_check:
                     st.checkbox("", key=f"check_{trade.id}", value=trade.id in st.session_state.delete_ids,
                                label_visibility="collapsed", on_change=on_checkbox_change, args=(trade.id,))
 
-                with c2:
-                    st.markdown(f'<div style="padding-top:6px;"><span style="background:{trade_bg};color:{trade_color};padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;">{trade_type_str}</span></div>', unsafe_allow_html=True)
+                with col_card:
+                    st.markdown(f"""
+                    <div style="display: flex; justify-content: space-between; align-items: center;
+                                padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
+                                border: 1px solid #F2F3F5;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="background: {trade_bg}; color: {trade_color}; padding: 4px 8px;
+                                        border-radius: 4px; font-size: 12px; font-weight: 600;">{trade_type_str}</span>
+                            <span style="font-weight: 600; color: #191F28;">{trade.stock_name}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #191F28; font-size: 14px;">{float(trade.price):,.0f}원 × {trade.quantity}주</div>
+                            <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                with c3:
-                    if st.button(trade.stock_name, key=f"edit_{trade.id}", use_container_width=True):
+                with col_edit:
+                    if st.button("수정", key=f"edit_{trade.id}"):
                         st.session_state.edit_trade_id = trade.id
                         st.rerun()
-
-                with c4:
-                    st.markdown(f'<div style="text-align:right;"><div style="color:#191F28;font-size:14px;">{float(trade.price):,.0f}원 × {trade.quantity}주</div><div style="font-size:13px;">{profit_info if profit_info else "<span style=color:#8B95A1>-</span>"}</div></div>', unsafe_allow_html=True)
-
-                st.markdown('</div>', unsafe_allow_html=True)
 
         # 삭제 버튼 (선택된 항목이 있을 때만 - 리스트 하단에 표시)
         if st.session_state.delete_ids:
