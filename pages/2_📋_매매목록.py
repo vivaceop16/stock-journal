@@ -289,7 +289,7 @@ elif view_mode == "종목별":
             background: #FFFFFF !important;
             border: 1px solid #F2F3F5 !important;
             border-radius: 8px !important;
-            margin: 6px 0 !important;
+            margin: 8px 0 !important;
             overflow: hidden;
         }
         [data-testid="stExpander"] details {
@@ -297,10 +297,13 @@ elif view_mode == "종목별":
             background: transparent !important;
         }
         [data-testid="stExpander"] summary {
-            padding: 12px 16px !important;
+            padding: 16px !important;
+            min-height: 52px !important;
             font-weight: 400 !important;
             color: #191F28 !important;
             font-size: 14px !important;
+            display: flex !important;
+            align-items: center !important;
         }
         [data-testid="stExpander"] summary:hover {
             background: #E8EBED !important;
