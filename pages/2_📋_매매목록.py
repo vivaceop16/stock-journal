@@ -332,8 +332,24 @@ elif view_mode == "종목별":
             # 평단가 계산 (총 매수금액 / 총 매수수량)
             avg_price = data['total_invested'] / total_buy_qty if total_buy_qty > 0 else 0
 
-            # 종목 카드 + 상세 내역 통합 (expander로)
-            with st.expander(f"📊 {stock_name} · {latest_date} · 매수 {len(buys)}회 / 매도 {len(sells)}회 · 평단가 {avg_price:,.0f}원", expanded=False):
+            # 종목 요약 카드 (전체 목록 스타일)
+            profit_info = ""
+            if total_profit != 0:
+                p_color = "#F04452" if total_profit > 0 else "#3182F6"
+                p_sign = "+" if total_profit > 0 else ""
+                profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{total_profit:,.0f}원</span>'
+
+            with st.expander(f"📊 {stock_name}", expanded=False):
+                # 종목 요약 정보
+                st.markdown(f"""
+                <div style="display: flex; gap: 16px; padding: 8px 0 12px 0; font-size: 13px; color: #6B7684; border-bottom: 1px solid #F2F3F5; margin-bottom: 8px;">
+                    <span>최근 거래 <strong style="color: #191F28;">{latest_date}</strong></span>
+                    <span>매수 <strong style="color: #3182F6;">{len(buys)}회</strong></span>
+                    <span>매도 <strong style="color: #F04452;">{len(sells)}회</strong></span>
+                    <span>평단가 <strong style="color: #191F28;">{avg_price:,.0f}원</strong></span>
+                </div>
+                """, unsafe_allow_html=True)
+
                 # 거래 내역 - 날짜별 그룹화
                 all_stock_trades = buys + sells
                 date_grouped = defaultdict(list)
@@ -341,71 +357,31 @@ elif view_mode == "종목별":
                     date_grouped[t.trade_date].append(t)
 
                 for t_date, day_trades in sorted(date_grouped.items(), reverse=True):
-                    # 날짜별 손익 합계
-                    day_profit = sum(float(t.profit_loss or 0) for t in day_trades if t.profit_loss)
-                    profit_str = ""
-                    if day_profit != 0:
-                        profit_color = "#F04452" if day_profit > 0 else "#3182F6"
-                        profit_sign = "+" if day_profit > 0 else ""
-                        profit_str = f'<span style="color: {profit_color}; font-weight: 600;">{profit_sign}{day_profit:,.0f}원</span>'
-
                     # 날짜 헤더
                     st.markdown(f"""
-                    <div style="display: flex; justify-content: space-between; align-items: center;
-                                padding: 10px 0; margin-top: 8px;">
-                        <span style="font-weight: 600; color: #191F28; font-size: 14px;">{t_date}</span>
-                        {profit_str}
+                    <div style="font-size: 13px; font-weight: 600; color: #6B7684; padding: 12px 0 6px 0; border-bottom: 1px solid #F2F3F5;">
+                        {t_date}
                     </div>
                     """, unsafe_allow_html=True)
 
-                    # 해당 날짜 거래들 - 전체 목록과 동일한 레이아웃
+                    # 해당 날짜 거래들
                     for t in sorted(day_trades, key=lambda x: x.id):
                         t_type = "매수" if t.trade_type == "BUY" else "매도"
                         t_bg = "#E8F3FF" if t.trade_type == "BUY" else "#FFEFEF"
                         t_color = "#3182F6" if t.trade_type == "BUY" else "#F04452"
 
-                        profit_info = ""
+                        t_profit_info = ""
                         if t.profit_loss:
-                            p_color = "#F04452" if t.profit_loss > 0 else "#3182F6"
-                            p_sign = "+" if t.profit_loss > 0 else ""
-                            profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{float(t.profit_loss):,.0f}원</span>'
+                            tp_color = "#F04452" if t.profit_loss > 0 else "#3182F6"
+                            t_profit_info = f'<span style="color: {tp_color}; font-weight: 600; margin-left: 8px;">{t.profit_loss:+,.0f}원</span>'
 
-                        # 카드 + 수정버튼 (전체 목록과 동일)
-                        col_card, col_edit = st.columns([0.88, 0.12])
+                        # 거래 정보 표시
+                        trade_radius = "6px 6px 0 0" if t.trade_reason else "6px"
+                        st.markdown(f'<div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #FAFBFC; border-radius: {trade_radius}; margin-top: 4px;"><div style="display: flex; align-items: center; gap: 10px;"><span style="background: {t_bg}; color: {t_color}; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">{t_type}</span><span style="color: #191F28; font-size: 14px;">{float(t.price):,.0f}원 × {t.quantity}주</span></div><div><span style="color: #6B7684; font-size: 13px;">{float(t.total_amount or 0):,.0f}원</span>{t_profit_info}</div></div>', unsafe_allow_html=True)
 
-                        with col_card:
-                            check_col, card_col = st.columns([0.05, 0.95])
-                            with check_col:
-                                st.checkbox(
-                                    "선택",
-                                    key=f"check_stock_{t.id}",
-                                    value=t.id in st.session_state.delete_ids,
-                                    label_visibility="collapsed",
-                                    on_change=on_checkbox_change,
-                                    args=(t.id,)
-                                )
-                            with card_col:
-                                st.markdown(f"""
-                                <div style="display: flex; justify-content: space-between; align-items: center;
-                                            padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
-                                            margin: 6px 0; border: 1px solid #F2F3F5;">
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <span style="background: {t_bg}; color: {t_color}; padding: 4px 8px;
-                                                    border-radius: 4px; font-size: 12px; font-weight: 600;">{t_type}</span>
-                                        <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div style="color: #191F28; font-size: 14px;">{float(t.price):,.0f}원 × {t.quantity}주</div>
-                                        <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
-                                    </div>
-                                </div>
-                                """, unsafe_allow_html=True)
-
-                        with col_edit:
-                            st.markdown("<div style='height: 6px'></div>", unsafe_allow_html=True)
-                            if st.button("수정", key=f"edit_stock_{t.id}", use_container_width=True):
-                                st.session_state.edit_trade_id = t.id
-                                st.rerun()
+                        # 매매 근거 표시 (별도 마크다운)
+                        if t.trade_reason:
+                            st.markdown(f'<div style="padding: 8px 12px; margin: 0 0 8px 0; background: #F7F8FA; border-radius: 0 0 6px 6px; border-top: 1px dashed #E5E8EB;"><span style="color: #8B95A1; font-size: 11px;">📝 </span><span style="color: #6B7684; font-size: 13px; line-height: 1.5;">{t.trade_reason}</span></div>', unsafe_allow_html=True)
 
                 # 손익 요약
                 if total_profit != 0:
@@ -420,6 +396,10 @@ elif view_mode == "종목별":
                         </span>
                     </div>
                     """, unsafe_allow_html=True)
+
+                # 수정 버튼 안내
+                st.markdown("<div style='height: 8px'></div>", unsafe_allow_html=True)
+                st.info("💡 개별 거래를 수정하려면 '전체 목록' 보기에서 수정할 수 있어요.")
 
     else:
         st.info("조건에 맞는 매매 기록이 없습니다.")

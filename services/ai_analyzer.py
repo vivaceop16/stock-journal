@@ -383,3 +383,4 @@ class AIAnalyzer:
             ).all()
         finally:
             session.close()
+
