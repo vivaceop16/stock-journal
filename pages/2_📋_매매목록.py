@@ -304,7 +304,7 @@ elif view_mode == "종목별":
             font-size: 14px !important;
         }
         [data-testid="stExpander"] summary:hover {
-            background: #F8F9FA !important;
+            background: #E8EBED !important;
         }
         [data-testid="stExpander"] summary p {
             font-weight: 400 !important;
