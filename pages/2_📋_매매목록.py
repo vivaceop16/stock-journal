@@ -297,7 +297,7 @@ elif view_mode == "종목별":
             background: transparent !important;
         }
         [data-testid="stExpander"] summary {
-            padding: 14px 16px !important;
+            padding: 18px 16px !important;
             font-weight: 400 !important;
             color: #191F28 !important;
             font-size: 14px !important;
