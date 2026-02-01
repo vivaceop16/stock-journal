@@ -333,15 +333,40 @@ elif view_mode == "종목별":
             avg_price = data['total_invested'] / total_buy_qty if total_buy_qty > 0 else 0
 
             # 손익 표시
-            profit_display = ""
+            profit_info = ""
             if total_profit != 0:
+                p_color = "#F04452" if total_profit > 0 else "#3182F6"
                 p_sign = "+" if total_profit > 0 else ""
-                profit_display = f"{p_sign}{total_profit:,.0f}원"
-            else:
-                profit_display = "-"
+                profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{total_profit:,.0f}원</span>'
 
-            # 종목 카드 + 상세 통합 (클릭하면 상세 보기)
-            with st.expander(f"{stock_name} · 매수 {len(buys)}회 / 매도 {len(sells)}회 · 평단가 {avg_price:,.0f}원 · {profit_display}", expanded=False):
+            # 매수/매도 뱃지 (더 많은 쪽 표시)
+            if len(buys) >= len(sells):
+                badge_type = "매수"
+                badge_bg = "#E8F3FF"
+                badge_color = "#3182F6"
+            else:
+                badge_type = "매도"
+                badge_bg = "#FFEFEF"
+                badge_color = "#F04452"
+
+            # 종목 카드 + 상세 통합 (전체목록 스타일)
+            with st.expander(f"{stock_name} · 매수 {len(buys)} / 매도 {len(sells)} · 평단가 {avg_price:,.0f}원", expanded=False):
+                # 요약 카드 (전체목록 스타일)
+                st.markdown(f"""
+                <div style="display: flex; justify-content: space-between; align-items: center;
+                            padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
+                            margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="background: {badge_bg}; color: {badge_color}; padding: 4px 8px;
+                                    border-radius: 4px; font-size: 12px; font-weight: 600;">{badge_type} {len(buys) if badge_type == '매수' else len(sells)}</span>
+                        <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: #191F28; font-size: 14px;">평단가 {avg_price:,.0f}원</div>
+                        <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
                 # 거래 내역 - 날짜별 그룹화
                 all_stock_trades = buys + sells
