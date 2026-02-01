@@ -281,6 +281,27 @@ if view_mode == "날짜별":
 # ========== 종목별 보기 ==========
 elif view_mode == "종목별":
     if trades:
+        # 종목별 expander 카드 스타일 적용
+        st.markdown("""
+        <style>
+        /* 종목별 expander 스타일 */
+        div[data-testid="stExpander"] {
+            background: #FFFFFF;
+            border: 1px solid #F2F3F5;
+            border-radius: 8px;
+            margin: 6px 0;
+        }
+        div[data-testid="stExpander"] > details > summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #191F28;
+        }
+        div[data-testid="stExpander"] > details > summary:hover {
+            background: #F8F9FA;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         stock_groups = defaultdict(lambda: {
             'buys': [], 'sells': [], 'total_profit': 0,
             'total_invested': 0, 'latest_date': None, 'trade_reasons': [],
@@ -349,25 +370,12 @@ elif view_mode == "종목별":
                 badge_bg = "#FFEFEF"
                 badge_color = "#F04452"
 
-            # 종목 요약 카드 (전체목록 스타일) - expander 바깥에 표시
-            st.markdown(f"""
-            <div style="display: flex; justify-content: space-between; align-items: center;
-                        padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
-                        margin: 6px 0; border: 1px solid #F2F3F5;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="background: {badge_bg}; color: {badge_color}; padding: 4px 8px;
-                                border-radius: 4px; font-size: 12px; font-weight: 600;">{badge_type} {len(buys) if badge_type == '매수' else len(sells)}</span>
-                    <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
-                </div>
-                <div style="text-align: right;">
-                    <div style="color: #191F28; font-size: 14px;">평단가 {avg_price:,.0f}원</div>
-                    <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # 종목 카드를 expander 레이블로 사용 (클릭하면 확장/축소)
+            badge_count = len(buys) if badge_type == '매수' else len(sells)
+            profit_display = f" | {'+' if total_profit > 0 else ''}{total_profit:,.0f}원" if total_profit != 0 else ""
+            expander_label = f"{badge_type} {badge_count} · {stock_name} · 평단가 {avg_price:,.0f}원{profit_display}"
 
-            # 상세 보기 expander
-            with st.expander("상세 내역 보기", expanded=False):
+            with st.expander(expander_label, expanded=False):
 
                 # 거래 내역 - 날짜별 그룹화
                 all_stock_trades = buys + sells
