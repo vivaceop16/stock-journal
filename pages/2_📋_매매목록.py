@@ -447,6 +447,34 @@ elif view_mode == "종목별":
 # ========== 전체 목록 ==========
 else:
     if trades:
+        # 선택된 항목이 있으면 상단에 수정/삭제 툴바 표시
+        if st.session_state.delete_ids:
+            selected_count = len(st.session_state.delete_ids)
+            toolbar_col1, toolbar_col2, toolbar_col3, toolbar_col4 = st.columns([0.4, 0.2, 0.2, 0.2])
+
+            with toolbar_col1:
+                st.markdown(f"<div style='padding-top:8px; font-weight:600; color:#191F28;'>{selected_count}건 선택됨</div>", unsafe_allow_html=True)
+
+            with toolbar_col2:
+                if selected_count == 1:
+                    if st.button("✏️ 수정", use_container_width=True):
+                        st.session_state.edit_trade_id = list(st.session_state.delete_ids)[0]
+                        st.rerun()
+
+            with toolbar_col3:
+                if st.button("🗑️ 삭제", use_container_width=True, type="primary"):
+                    for del_id in list(st.session_state.delete_ids):
+                        trade_service.delete_trade(del_id)
+                    st.session_state.delete_ids = set()
+                    st.success("삭제되었습니다.")
+                    st.rerun()
+
+            with toolbar_col4:
+                if st.button("선택 해제", use_container_width=True):
+                    st.session_state.delete_ids = set()
+                    st.rerun()
+
+            st.markdown("<hr style='margin: 8px 0; border: none; border-top: 1px solid #E5E8EB;'>", unsafe_allow_html=True)
 
         # 날짜별로 그룹화
         date_groups = defaultdict(list)
@@ -485,8 +513,8 @@ else:
                     p_sign = "+" if rate > 0 else ""
                     profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{float(trade.profit_loss):,.0f}원</span>'
 
-                # 체크박스 | 카드 | 수정버튼
-                col_check, col_card, col_edit = st.columns([0.05, 0.85, 0.1])
+                # 체크박스 | 카드
+                col_check, col_card = st.columns([0.05, 0.95])
 
                 with col_check:
                     st.checkbox("", key=f"check_{trade.id}", value=trade.id in st.session_state.delete_ids,
@@ -508,23 +536,6 @@ else:
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
-
-                with col_edit:
-                    if st.button("수정", key=f"edit_{trade.id}"):
-                        st.session_state.edit_trade_id = trade.id
-                        st.rerun()
-
-        # 삭제 버튼 (선택된 항목이 있을 때만 - 리스트 하단에 표시)
-        if st.session_state.delete_ids:
-            st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
-            col_del1, col_del2, col_del3 = st.columns([1, 1, 1])
-            with col_del2:
-                if st.button(f"🗑️ {len(st.session_state.delete_ids)}건 삭제", type="primary", use_container_width=True):
-                    for del_id in list(st.session_state.delete_ids):
-                        trade_service.delete_trade(del_id)
-                    st.session_state.delete_ids = set()
-                    st.success("삭제되었습니다.")
-                    st.rerun()
 
     else:
         st.markdown("""
