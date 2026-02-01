@@ -339,7 +339,23 @@ elif view_mode == "종목별":
                 p_sign = "+" if total_profit > 0 else ""
                 profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{total_profit:,.0f}원</span>'
 
-            with st.expander(f"📊 {stock_name}", expanded=False):
+            # 전체 목록 스타일 카드
+            st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; align-items: center;
+                        padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
+                        margin: 6px 0; border: 1px solid #F2F3F5;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
+                    <span style="color: #8B95A1; font-size: 12px;">매수 {len(buys)}회 · 매도 {len(sells)}회</span>
+                </div>
+                <div style="text-align: right;">
+                    <div style="color: #191F28; font-size: 14px;">평단가 {avg_price:,.0f}원</div>
+                    <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            with st.expander(f"상세 내역 보기", expanded=False):
                 # 종목 요약 정보
                 st.markdown(f"""
                 <div style="display: flex; gap: 16px; padding: 8px 0 12px 0; font-size: 13px; color: #6B7684; border-bottom: 1px solid #F2F3F5; margin-bottom: 8px;">
