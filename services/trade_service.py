@@ -86,9 +86,15 @@ class TradeService:
         return query.order_by(desc(Trade.trade_date), desc(Trade.id)).offset(offset).limit(limit).all()
 
     def get_stock_names(self) -> List[str]:
-        """기존 종목명 목록 조회 (중복 제거)"""
+        """기존 종목명 목록 조회 (중복 제거, 대문자 정규화)"""
         results = self.session.query(Trade.stock_name).distinct().all()
-        return sorted([r[0] for r in results if r[0]])
+        # 대소문자 무시하고 대문자로 정규화하여 중복 제거
+        unique_names = {}
+        for r in results:
+            if r[0]:
+                upper_name = r[0].upper() if r[0].isascii() else r[0]
+                unique_names[upper_name] = upper_name
+        return sorted(unique_names.values())
 
     def get_unlinked_buys(self, stock_name: str) -> List[Trade]:
         """매도와 연결되지 않은 매수 기록 조회 (대소문자 무시)"""

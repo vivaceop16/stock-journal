@@ -47,8 +47,8 @@ if 'form_key' not in st.session_state:
     st.session_state.form_key = 0
 
 # 거래 항목 리스트 (여러 가격/수량 입력용) - 기본 3개
-if 'trade_entries' not in st.session_state:
-    st.session_state.trade_entries = [{'price': 0, 'quantity': 1}, {'price': 0, 'quantity': 1}, {'price': 0, 'quantity': 1}]
+if 'trade_entries' not in st.session_state or len(st.session_state.trade_entries) < 3:
+    st.session_state.trade_entries = [{'price': 0, 'quantity': 0}, {'price': 0, 'quantity': 0}, {'price': 0, 'quantity': 0}]
 
 # 기존 종목명 목록 가져오기
 existing_stocks = trade_service.get_stock_names()
@@ -134,13 +134,13 @@ for i, entry in enumerate(st.session_state.trade_entries):
             total_amount += subtotal
             st.markdown(f"<div style='padding-top: {'28px' if i == 0 else '8px'}; color: #6B7684; font-size: 14px;'>{subtotal:,.0f}원</div>", unsafe_allow_html=True)
 
-# 거래 추가/삭제 버튼 (작게)
-col1, col2, col3 = st.columns([1, 1, 2])
-with col1:
+# 거래 추가/삭제 버튼 (작게, 붙여서)
+btn_col1, btn_col2, btn_col3 = st.columns([0.15, 0.15, 0.7])
+with btn_col1:
     if st.button("➕ 추가", key=f"add_entry_{st.session_state.form_key}"):
-        st.session_state.trade_entries.append({'price': 0, 'quantity': 1})
+        st.session_state.trade_entries.append({'price': 0, 'quantity': 0})
         st.rerun()
-with col2:
+with btn_col2:
     if len(st.session_state.trade_entries) > 1:
         if st.button("➖ 삭제", key=f"remove_entry_{st.session_state.form_key}"):
             st.session_state.trade_entries.pop()
@@ -264,7 +264,7 @@ if st.button("저장하기", use_container_width=True, type="primary", key=f"sub
             st.session_state['trade_saved'] = True
             st.session_state['saved_count'] = saved_count
             st.session_state.form_key += 1
-            st.session_state.trade_entries = [{'price': 0, 'quantity': 1}, {'price': 0, 'quantity': 1}, {'price': 0, 'quantity': 1}]  # 리셋
+            st.session_state.trade_entries = [{'price': 0, 'quantity': 0}, {'price': 0, 'quantity': 0}, {'price': 0, 'quantity': 0}]  # 리셋
             st.rerun()
 
         except Exception as e:
