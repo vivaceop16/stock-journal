@@ -281,12 +281,33 @@ if view_mode == "날짜별":
 # ========== 종목별 보기 ==========
 elif view_mode == "종목별":
     if trades:
-        # 종목별 expander 스타일 (카드 아래 붙여서 표시)
+        # 종목별 expander를 카드처럼 스타일링
         st.markdown("""
         <style>
-        /* 종목별 expander - 카드와 연결되는 스타일 */
+        /* 종목별 expander 카드 스타일 */
         [data-testid="stExpander"] {
-            margin-top: -8px !important;
+            background: #FFFFFF !important;
+            border: 1px solid #F2F3F5 !important;
+            border-radius: 8px !important;
+            margin: 6px 0 !important;
+            overflow: hidden;
+        }
+        [data-testid="stExpander"] details {
+            border: none !important;
+            background: transparent !important;
+        }
+        [data-testid="stExpander"] summary {
+            padding: 14px 16px !important;
+            font-weight: 600 !important;
+            color: #191F28 !important;
+            font-size: 14px !important;
+        }
+        [data-testid="stExpander"] summary:hover {
+            background: #F8F9FA !important;
+        }
+        [data-testid="stExpander"] summary p {
+            font-weight: 600 !important;
+            font-size: 14px !important;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -359,28 +380,15 @@ elif view_mode == "종목별":
                 badge_bg = "#FFEFEF"
                 badge_color = "#F04452"
 
-            # 종목 카드 (전체목록과 동일한 디자인)
+            # 종목 카드 expander (카드 스타일 적용됨)
             badge_count = len(buys) if badge_type == '매수' else len(sells)
+            profit_text = f" │ {'+' if total_profit > 0 else ''}{total_profit:,.0f}원" if total_profit != 0 else ""
 
-            # 카드 HTML (전체목록 스타일)
-            st.markdown(f"""
-            <div style="display: flex; justify-content: space-between; align-items: center;
-                        padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
-                        margin: 6px 0; border: 1px solid #F2F3F5;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="background: {badge_bg}; color: {badge_color}; padding: 4px 8px;
-                                border-radius: 4px; font-size: 12px; font-weight: 600;">{badge_type} {badge_count}</span>
-                    <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
-                </div>
-                <div style="text-align: right;">
-                    <div style="color: #191F28; font-size: 14px;">평단가 {avg_price:,.0f}원</div>
-                    <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            # expander 레이블 (텍스트만 가능하므로 이모지로 뱃지 표현)
+            badge_emoji = "🔵" if badge_type == "매수" else "🔴"
+            expander_label = f"{badge_emoji} {badge_type} {badge_count}  ·  {stock_name}  ·  평단가 {avg_price:,.0f}원{profit_text}"
 
-            # 상세 내역 expander
-            with st.expander("상세 내역", expanded=False):
+            with st.expander(expander_label, expanded=False):
 
                 # 거래 내역 - 날짜별 그룹화
                 all_stock_trades = buys + sells
