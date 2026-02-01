@@ -332,39 +332,16 @@ elif view_mode == "종목별":
             # 평단가 계산 (총 매수금액 / 총 매수수량)
             avg_price = data['total_invested'] / total_buy_qty if total_buy_qty > 0 else 0
 
-            # 종목 요약 카드 (전체 목록 스타일)
-            profit_info = ""
+            # 손익 표시
+            profit_display = ""
             if total_profit != 0:
-                p_color = "#F04452" if total_profit > 0 else "#3182F6"
                 p_sign = "+" if total_profit > 0 else ""
-                profit_info = f'<span style="color: {p_color}; font-weight: 600;">{p_sign}{total_profit:,.0f}원</span>'
+                profit_display = f"{p_sign}{total_profit:,.0f}원"
+            else:
+                profit_display = "-"
 
-            # 전체 목록 스타일 카드
-            st.markdown(f"""
-            <div style="display: flex; justify-content: space-between; align-items: center;
-                        padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
-                        margin: 6px 0; border: 1px solid #F2F3F5;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
-                    <span style="color: #8B95A1; font-size: 12px;">매수 {len(buys)}회 · 매도 {len(sells)}회</span>
-                </div>
-                <div style="text-align: right;">
-                    <div style="color: #191F28; font-size: 14px;">평단가 {avg_price:,.0f}원</div>
-                    <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            with st.expander(f"상세 내역 보기", expanded=False):
-                # 종목 요약 정보
-                st.markdown(f"""
-                <div style="display: flex; gap: 16px; padding: 8px 0 12px 0; font-size: 13px; color: #6B7684; border-bottom: 1px solid #F2F3F5; margin-bottom: 8px;">
-                    <span>최근 거래 <strong style="color: #191F28;">{latest_date}</strong></span>
-                    <span>매수 <strong style="color: #3182F6;">{len(buys)}회</strong></span>
-                    <span>매도 <strong style="color: #F04452;">{len(sells)}회</strong></span>
-                    <span>평단가 <strong style="color: #191F28;">{avg_price:,.0f}원</strong></span>
-                </div>
-                """, unsafe_allow_html=True)
+            # 종목 카드 + 상세 통합 (클릭하면 상세 보기)
+            with st.expander(f"{stock_name} · 매수 {len(buys)}회 / 매도 {len(sells)}회 · 평단가 {avg_price:,.0f}원 · {profit_display}", expanded=False):
 
                 # 거래 내역 - 날짜별 그룹화
                 all_stock_trades = buys + sells
