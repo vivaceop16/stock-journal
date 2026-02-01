@@ -297,8 +297,9 @@ elif view_mode == "종목별":
             background: transparent !important;
         }
         [data-testid="stExpander"] summary {
-            padding: 14px 16px !important;
-            font-weight: 600 !important;
+            padding: 16px !important;
+            min-height: 56px !important;
+            font-weight: 400 !important;
             color: #191F28 !important;
             font-size: 14px !important;
         }
@@ -306,7 +307,7 @@ elif view_mode == "종목별":
             background: #F8F9FA !important;
         }
         [data-testid="stExpander"] summary p {
-            font-weight: 600 !important;
+            font-weight: 400 !important;
             font-size: 14px !important;
         }
         </style>
@@ -381,12 +382,12 @@ elif view_mode == "종목별":
                 badge_color = "#F04452"
 
             # 종목 카드 expander (카드 스타일 적용됨)
-            badge_count = len(buys) if badge_type == '매수' else len(sells)
-            profit_text = f" │ {'+' if total_profit > 0 else ''}{total_profit:,.0f}원" if total_profit != 0 else ""
+            # 레이블: 종목명 · 매수 1 매도 2 · 평단가 · 손익
+            buy_count = len(buys)
+            sell_count = len(sells)
+            profit_text = f" · {'+' if total_profit > 0 else ''}{total_profit:,.0f}원" if total_profit != 0 else ""
 
-            # expander 레이블 (텍스트만 가능하므로 이모지로 뱃지 표현)
-            badge_emoji = "🔵" if badge_type == "매수" else "🔴"
-            expander_label = f"{badge_emoji} {badge_type} {badge_count}  ·  {stock_name}  ·  평단가 {avg_price:,.0f}원{profit_text}"
+            expander_label = f"{stock_name}  ·  매수 {buy_count}  매도 {sell_count}  ·  평단가 {avg_price:,.0f}원{profit_text}"
 
             with st.expander(expander_label, expanded=False):
 
