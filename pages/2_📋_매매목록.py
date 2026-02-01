@@ -281,27 +281,6 @@ if view_mode == "날짜별":
 # ========== 종목별 보기 ==========
 elif view_mode == "종목별":
     if trades:
-        # 종목별 expander 카드 스타일 적용
-        st.markdown("""
-        <style>
-        /* 종목별 expander 스타일 */
-        div[data-testid="stExpander"] {
-            background: #FFFFFF;
-            border: 1px solid #F2F3F5;
-            border-radius: 8px;
-            margin: 6px 0;
-        }
-        div[data-testid="stExpander"] > details > summary {
-            padding: 12px 16px;
-            font-weight: 600;
-            color: #191F28;
-        }
-        div[data-testid="stExpander"] > details > summary:hover {
-            background: #F8F9FA;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
         stock_groups = defaultdict(lambda: {
             'buys': [], 'sells': [], 'total_profit': 0,
             'total_invested': 0, 'latest_date': None, 'trade_reasons': [],
@@ -370,12 +349,43 @@ elif view_mode == "종목별":
                 badge_bg = "#FFEFEF"
                 badge_color = "#F04452"
 
-            # 종목 카드를 expander 레이블로 사용 (클릭하면 확장/축소)
+            # 종목 카드 (클릭하면 확장/축소) - 기존 디자인 유지
             badge_count = len(buys) if badge_type == '매수' else len(sells)
-            profit_display = f" | {'+' if total_profit > 0 else ''}{total_profit:,.0f}원" if total_profit != 0 else ""
-            expander_label = f"{badge_type} {badge_count} · {stock_name} · 평단가 {avg_price:,.0f}원{profit_display}"
 
-            with st.expander(expander_label, expanded=False):
+            # 확장 상태 관리
+            expand_key = f"expand_{stock_key}"
+            if expand_key not in st.session_state:
+                st.session_state[expand_key] = False
+
+            is_expanded = st.session_state[expand_key]
+            arrow = "▼" if is_expanded else "▶"
+
+            # 카드 + 토글 버튼
+            col_card, col_btn = st.columns([0.92, 0.08])
+            with col_card:
+                st.markdown(f"""
+                <div style="display: flex; justify-content: space-between; align-items: center;
+                            padding: 12px 16px; background: #FFFFFF; border-radius: 8px;
+                            margin: 6px 0; border: 1px solid #F2F3F5; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="background: {badge_bg}; color: {badge_color}; padding: 4px 8px;
+                                    border-radius: 4px; font-size: 12px; font-weight: 600;">{badge_type} {badge_count}</span>
+                        <span style="font-weight: 600; color: #191F28;">{stock_name}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: #191F28; font-size: 14px;">평단가 {avg_price:,.0f}원</div>
+                        <div style="font-size: 13px;">{profit_info if profit_info else '<span style="color: #8B95A1;">-</span>'}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            with col_btn:
+                st.markdown("<div style='height: 6px'></div>", unsafe_allow_html=True)
+                if st.button(arrow, key=f"toggle_{stock_key}", use_container_width=True):
+                    st.session_state[expand_key] = not st.session_state[expand_key]
+                    st.rerun()
+
+            # 상세 내역 (확장 시에만 표시)
+            if is_expanded:
 
                 # 거래 내역 - 날짜별 그룹화
                 all_stock_trades = buys + sells
