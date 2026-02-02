@@ -447,35 +447,6 @@ elif view_mode == "종목별":
 # ========== 전체 목록 ==========
 else:
     if trades:
-        # 선택된 항목이 있으면 상단에 수정/삭제 툴바 표시
-        if st.session_state.delete_ids:
-            selected_count = len(st.session_state.delete_ids)
-            toolbar_col1, toolbar_col2, toolbar_col3, toolbar_col4 = st.columns([0.4, 0.2, 0.2, 0.2])
-
-            with toolbar_col1:
-                st.markdown(f"<div style='padding-top:8px; font-weight:600; color:#191F28;'>{selected_count}건 선택됨</div>", unsafe_allow_html=True)
-
-            with toolbar_col2:
-                if selected_count == 1:
-                    if st.button("✏️ 수정", use_container_width=True):
-                        st.session_state.edit_trade_id = list(st.session_state.delete_ids)[0]
-                        st.rerun()
-
-            with toolbar_col3:
-                if st.button("🗑️ 삭제", use_container_width=True, type="primary"):
-                    for del_id in list(st.session_state.delete_ids):
-                        trade_service.delete_trade(del_id)
-                    st.session_state.delete_ids = set()
-                    st.success("삭제되었습니다.")
-                    st.rerun()
-
-            with toolbar_col4:
-                if st.button("선택 해제", use_container_width=True):
-                    st.session_state.delete_ids = set()
-                    st.rerun()
-
-            st.markdown("<hr style='margin: 8px 0; border: none; border-top: 1px solid #E5E8EB;'>", unsafe_allow_html=True)
-
         # 날짜별로 그룹화
         date_groups = defaultdict(list)
         for trade in trades:
@@ -536,6 +507,56 @@ else:
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
+
+        # 하단 플로팅 툴바 (선택된 항목이 있을 때만)
+        if st.session_state.delete_ids:
+            selected_count = len(st.session_state.delete_ids)
+
+            # 하단 고정 스타일
+            st.markdown("""
+            <style>
+            div[data-testid="stVerticalBlock"]:has(> div[data-testid="stHorizontalBlock"] > div[data-testid="column"] > div > div > button[kind="primary"]):last-of-type {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                background: #191F28 !important;
+                padding: 16px 24px !important;
+                z-index: 1000 !important;
+                margin: 0 !important;
+                border-radius: 16px 16px 0 0 !important;
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.1) !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
+            # 하단 여백 추가 (플로팅 바가 콘텐츠 가리지 않게)
+            st.markdown("<div style='height: 80px'></div>", unsafe_allow_html=True)
+
+            # 툴바 버튼들
+            if selected_count == 1:
+                t_col1, t_col2, t_col3, t_col4 = st.columns([0.35, 0.25, 0.25, 0.15])
+            else:
+                t_col1, t_col2, t_col3, t_col4 = st.columns([0.35, 0.25, 0.25, 0.15])
+
+            with t_col1:
+                st.markdown(f"<div style='padding-top:8px; font-weight:600; color:#FFFFFF;'>{selected_count}건 선택</div>", unsafe_allow_html=True)
+            with t_col2:
+                if selected_count == 1:
+                    if st.button("✏️ 수정", key="float_edit", use_container_width=True):
+                        st.session_state.edit_trade_id = list(st.session_state.delete_ids)[0]
+                        st.rerun()
+            with t_col3:
+                if st.button("🗑️ 삭제", key="float_delete", use_container_width=True, type="primary"):
+                    for del_id in list(st.session_state.delete_ids):
+                        trade_service.delete_trade(del_id)
+                    st.session_state.delete_ids = set()
+                    st.success("삭제되었습니다.")
+                    st.rerun()
+            with t_col4:
+                if st.button("✕", key="float_cancel", use_container_width=True):
+                    st.session_state.delete_ids = set()
+                    st.rerun()
 
     else:
         st.markdown("""
